@@ -3,8 +3,8 @@ import type { Member } from '../types';
 
 // Profile API (current user)
 export async function getProfile(): Promise<Member> {
-  const response = await api.get<Member>('/api/members/me');
-  return response.data;
+  const response = await api.get<{ member: Member }>('/api/members/me');
+  return response.data.member;
 }
 
 export interface UpdateProfileData {
@@ -28,8 +28,8 @@ export interface UpdateProfileData {
 }
 
 export async function updateProfile(data: UpdateProfileData): Promise<Member> {
-  const response = await api.patch<Member>('/api/members/me', data);
-  return response.data;
+  const response = await api.patch<{ message: string; member: Member }>('/api/members/me', data);
+  return response.data.member;
 }
 
 // Password change
