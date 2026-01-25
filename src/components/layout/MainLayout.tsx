@@ -81,8 +81,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
               {/* Desktop Menu (hidden on mobile) */}
               <div className="hidden lg:flex gap-4 items-center">
                 {/* Dashboard Link */}
-                <Link to="/dashboard" className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-1">
-                  <span className="material-icons text-sm">dashboard</span>
+                <Link to="/dashboard" className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-2">
+                  <span className="material-icons text-2xl">dashboard</span>
                   <span>Platzübersicht</span>
                 </Link>
 
@@ -95,11 +95,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     onMouseLeave={handleAdminLeave}
                   >
                     <button
-                      className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-1"
+                      className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-2"
                       aria-haspopup="true"
                       aria-expanded={adminOpen}
                     >
-                      <span className="material-icons text-sm">admin_panel_settings</span>
+                      <span className="material-icons text-2xl">admin_panel_settings</span>
                       <span>Admin</span>
                       <span
                         className={`material-icons text-sm transition-transform duration-200 ${adminOpen ? 'rotate-180' : ''}`}
@@ -146,8 +146,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                 {/* Teamster Panel Link (teamsters only, NOT admins) */}
                 {isTeamster && !isAdmin && (
-                  <Link to="/admin/blocks" className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-1">
-                    <span className="material-icons text-sm">block</span>
+                  <Link to="/admin/blocks" className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-2">
+                    <span className="material-icons text-2xl">block</span>
                     <span>Platz-Sperrungen</span>
                   </Link>
                 )}
@@ -160,7 +160,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   onMouseLeave={handleAccountLeave}
                 >
                   <button
-                    className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-1"
+                    className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-2"
                     aria-haspopup="true"
                     aria-expanded={accountOpen}
                   >
@@ -168,10 +168,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       <img
                         src={`/api/members/${user.id}/profile-picture?v=${user.profile_picture_version}`}
                         alt=""
-                        className="w-6 h-6 rounded-full object-cover"
+                        className="rounded-full object-cover"
+                        style={{ width: 32, height: 32 }}
                       />
                     ) : (
-                      <span className="material-icons text-sm">account_circle</span>
+                      <span className="material-icons text-2xl">account_circle</span>
                     )}
                     <span>Mein Konto</span>
                     <span
@@ -317,10 +318,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     <img
                       src={`/api/members/${user.id}/profile-picture?v=${user.profile_picture_version}`}
                       alt=""
-                      className="w-5 h-5 rounded-full object-cover"
+                      className="w-7 h-7 rounded-full object-cover"
                     />
                   ) : (
-                    <span className="material-icons text-sm">account_circle</span>
+                    <span className="material-icons text-lg">account_circle</span>
                   )}
                   <span>Mein Konto</span>
                 </div>

@@ -1,34 +1,35 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Member } from '../types';
-import { getCurrentUser, login as apiLogin, logout as apiLogout } from '../api/auth';
+import { login as apiLogin, logout as apiLogout } from '../api/auth';
+import { getProfile } from '../api/members';
 import { AuthContext } from '../hooks/useAuth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
-  // Check for existing session on mount
-  useEffect(() => {
-    async function checkAuth() {
+  // Use React Query for profile data - shares cache with Profile page
+  const { data: user, isLoading } = useQuery<Member | null>({
+    queryKey: ['profile'],
+    queryFn: async () => {
       try {
-        const member = await getCurrentUser();
-        setUser(member);
+        return await getProfile();
       } catch {
         // No valid session - user needs to log in
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+        return null;
       }
-    }
-    checkAuth();
-  }, []);
+    },
+    staleTime: 60 * 1000, // Profile stays fresh for 1 minute
+    retry: false, // Don't retry on auth failure
+  });
 
   const login = async (email: string, password: string) => {
     setError(null);
     try {
       const response = await apiLogin({ email, password });
-      setUser(response.user);
+      // Update the cache with the logged-in user
+      queryClient.setQueryData(['profile'], response.user);
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
@@ -42,21 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await apiLogout();
     } finally {
-      setUser(null);
+      // Clear the profile cache
+      queryClient.setQueryData(['profile'], null);
+      queryClient.removeQueries({ queryKey: ['profile'] });
     }
   };
 
   const refreshProfile = async () => {
-    try {
-      const member = await getCurrentUser();
-      setUser(member);
-    } catch {
-      // Ignore errors - user might have been logged out
-    }
+    // Invalidate the cache to trigger a refetch
+    await queryClient.invalidateQueries({ queryKey: ['profile'] });
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, login, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user: user ?? null, isLoading, error, login, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

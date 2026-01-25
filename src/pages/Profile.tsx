@@ -204,7 +204,7 @@ export default function Profile() {
               >
                 {profile?.has_profile_picture ? (
                   <img
-                    src={`/api/members/${profile.id}/profile-picture?t=${Date.now()}`}
+                    src={`/api/members/${profile.id}/profile-picture?v=${profile.profile_picture_version}`}
                     alt="Profilbild"
                     className="w-full h-full object-cover"
                   />

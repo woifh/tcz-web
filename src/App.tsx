@@ -19,6 +19,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 30 * 1000, // Data stays fresh for 30 seconds
     },
   },
 });
