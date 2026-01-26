@@ -166,19 +166,15 @@ export default function Profile() {
     return first + last;
   };
 
-  const handleNotificationToggle = () => {
-    setFormData((prev) => ({
-      ...prev,
-      notifications_enabled: !prev.notifications_enabled,
-    }));
-  };
-
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
-          <div className="text-center py-8">
-            <span className="text-gray-500">Lade Profildaten...</span>
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-xl shadow-md p-8">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <span className="text-gray-500">Lade Profildaten...</span>
+            </div>
           </div>
         </div>
       </MainLayout>
@@ -187,283 +183,421 @@ export default function Profile() {
 
   return (
     <MainLayout>
-      <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
-        {/* Header with Profile Picture */}
-        <div className="flex justify-between items-start mb-6 pb-6 border-b">
-          <div>
-            <h2 className="text-2xl font-bold">Mein Profil</h2>
-            <p className="text-gray-600 text-sm mt-1">Hier kannst du deine Kontaktdaten bearbeiten.</p>
-          </div>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Mein Profil</h1>
+          <p className="text-gray-600">Verwalte deine persönlichen Informationen und Einstellungen</p>
+        </div>
 
-          {/* Profile Picture Section */}
-          <div className="flex flex-col items-center ml-4">
-            <div className="relative mb-2">
-              <div
-                className="rounded-full bg-green-100 flex items-center justify-center overflow-hidden"
-                style={{ width: 100, height: 100 }}
-              >
-                {profile?.has_profile_picture ? (
-                  <img
-                    src={`/api/members/${profile.id}/profile-picture?v=${profile.profile_picture_version}`}
-                    alt="Profilbild"
-                    className="w-full h-full object-cover"
-                  />
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Profile Picture Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
+              {/* Card Header with gradient */}
+              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 px-6 py-4 pb-16">
+              </div>
+
+              {/* Card Content */}
+              <div className="flex flex-col items-center -mt-14 px-6 pb-6">
+                {/* Avatar */}
+                <div className="relative mb-4">
+                  <div
+                    className="rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center overflow-hidden border-4 border-white shadow-xl"
+                    style={{ width: 128, height: 128 }}
+                  >
+                    {profile?.has_profile_picture ? (
+                      <img
+                        src={`/api/members/${profile.id}/profile-picture?v=${profile.profile_picture_version}`}
+                        alt="Profilbild"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-4xl font-semibold text-white">
+                        {getInitials(profile?.firstname, profile?.lastname)}
+                      </span>
+                    )}
+                  </div>
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Name */}
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                  {profile?.firstname} {profile?.lastname}
+                </h3>
+
+                {/* Verification Badge */}
+                {profile?.email_verified ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700 mb-4">
+                    <span className="material-icons text-base">verified</span>
+                    Verifiziert
+                  </span>
                 ) : (
-                  <span className="text-3xl font-medium text-green-600">
-                    {getInitials(profile?.firstname, profile?.lastname)}
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 mb-4">
+                    <span className="material-icons text-base">pending</span>
+                    Nicht verifiziert
                   </span>
                 )}
-              </div>
-              {isUploading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 rounded-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 w-full">
+                  <label className="flex-1 cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfilePictureChange}
+                    />
+                    <span className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                      <span className="material-icons text-lg">photo_camera</span>
+                      Ändern
+                    </span>
+                  </label>
+                  {profile?.has_profile_picture && (
+                    <button
+                      type="button"
+                      onClick={handleProfilePictureRemove}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                      title="Entfernen"
+                    >
+                      <span className="material-icons text-lg">delete</span>
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-            <div className="flex gap-3 mt-1">
-              <label className="cursor-pointer text-gray-500 hover:text-blue-600" title="Bild ändern">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleProfilePictureChange}
-                />
-                <span className="material-icons text-xl">photo_camera</span>
-              </label>
-              {profile?.has_profile_picture && (
-                <button
-                  type="button"
-                  onClick={handleProfilePictureRemove}
-                  className="text-gray-500 hover:text-red-600"
-                  title="Entfernen"
+          </div>
+
+          {/* Personal Data Form Card */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+              {/* Card Header */}
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <span className="material-icons text-gray-500">person</span>
+                  Persönliche Daten
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">Aktualisiere deine Kontaktinformationen</p>
+              </div>
+
+              {/* Card Content */}
+              <form onSubmit={handleSubmit} className="p-6">
+                {/* Name Section */}
+                <div className="grid gap-4 sm:grid-cols-2 mb-6">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <span className="material-icons text-base text-gray-400">person</span>
+                      Vorname
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.firstname}
+                      onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <span className="material-icons text-base text-gray-400">person</span>
+                      Nachname
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lastname}
+                      onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <hr className="border-gray-200 my-6" />
+
+                {/* Contact Section */}
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <span className="material-icons text-base text-gray-400">email</span>
+                      E-Mail
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      autoComplete="off"
+                      required
+                    />
+                    {!profile?.email_verified && (
+                      <button
+                        type="button"
+                        onClick={() => resendVerificationMutation.mutate()}
+                        disabled={resendVerificationMutation.isPending || resendVerificationMutation.isSuccess}
+                        className={`mt-2 text-sm underline disabled:opacity-50 ${
+                          resendVerificationMutation.isSuccess
+                            ? 'text-green-600'
+                            : 'text-blue-600 hover:text-blue-800'
+                        }`}
+                      >
+                        {resendVerificationMutation.isPending
+                          ? 'Wird gesendet...'
+                          : resendVerificationMutation.isSuccess
+                            ? 'E-Mail gesendet'
+                            : 'Bestätigungsmail erneut senden'}
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <span className="material-icons text-base text-gray-400">phone</span>
+                      Telefon
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Telefonnummer"
+                    />
+                  </div>
+                </div>
+
+                <hr className="border-gray-200 my-6" />
+
+                {/* Address Section */}
+                <div className="mb-6">
+                  <label className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-4">
+                    <span className="material-icons text-gray-500">location_on</span>
+                    Adresse
+                  </label>
+
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={formData.street}
+                      onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Straße und Hausnummer"
+                    />
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <input
+                        type="text"
+                        value={formData.zip_code}
+                        onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="PLZ"
+                      />
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all sm:col-span-2"
+                        placeholder="Stadt"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="border-gray-200 my-6" />
+
+                {/* Password Section */}
+                <div className="mb-6">
+                  <label className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-4">
+                    <span className="material-icons text-gray-500">lock</span>
+                    Passwort ändern
+                  </label>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      autoComplete="new-password"
+                      placeholder="Neues Passwort (optional)"
+                    />
+                    <input
+                      type="password"
+                      value={formData.password_confirm}
+                      onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      autoComplete="new-password"
+                      placeholder="Passwort bestätigen"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="material-icons text-lg">close</span>
+                    Abbrechen
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateMutation.isPending}
+                    className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 transition-all"
+                  >
+                    {updateMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Speichern...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-icons text-lg">save</span>
+                        Änderungen speichern
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Notifications Card - Full Width */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+              {/* Card Header */}
+              <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <span className="material-icons text-gray-500">notifications</span>
+                  E-Mail Benachrichtigungen
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">Wähle aus, welche Benachrichtigungen du erhalten möchtest</p>
+              </div>
+
+              {/* Card Content */}
+              <div className="p-6">
+                {/* Master Toggle */}
+                <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border-2 border-gray-200 mb-6">
+                  <div className="flex-1">
+                    <label htmlFor="notifications-toggle" className="text-base font-semibold text-gray-900 cursor-pointer">
+                      Benachrichtigungen aktiviert
+                    </label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Aktiviere oder deaktiviere alle E-Mail-Benachrichtigungen
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer ml-4">
+                    <input
+                      type="checkbox"
+                      id="notifications-toggle"
+                      checked={formData.notifications_enabled}
+                      onChange={() => setFormData(prev => ({ ...prev, notifications_enabled: !prev.notifications_enabled }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {/* Individual Notification Settings */}
+                <div
+                  className={`space-y-2 pl-4 border-l-4 border-blue-400 transition-opacity ${
+                    formData.notifications_enabled ? 'opacity-100' : 'opacity-50'
+                  }`}
                 >
-                  <span className="material-icons text-xl">delete</span>
-                </button>
-              )}
+                  <p className="text-sm font-medium text-gray-700 mb-4">Benachrichtigen bei:</p>
+
+                  {/* Notification Option: Own Bookings */}
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex-1">
+                      <label htmlFor="notify-own" className="font-medium text-gray-900 cursor-pointer">
+                        Eigene Buchungen
+                      </label>
+                      <p className="text-sm text-gray-600">Wenn du eine Buchung erstellst oder stornierst</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer ml-4">
+                      <input
+                        type="checkbox"
+                        id="notify-own"
+                        checked={formData.notify_own_bookings}
+                        onChange={(e) => setFormData({ ...formData, notify_own_bookings: e.target.checked })}
+                        disabled={!formData.notifications_enabled}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                    </label>
+                  </div>
+
+                  {/* Notification Option: Other Bookings */}
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex-1">
+                      <label htmlFor="notify-other" className="font-medium text-gray-900 cursor-pointer">
+                        Buchungen durch andere Mitglieder
+                      </label>
+                      <p className="text-sm text-gray-600">Wenn andere Mitglieder Buchungen vornehmen</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer ml-4">
+                      <input
+                        type="checkbox"
+                        id="notify-other"
+                        checked={formData.notify_other_bookings}
+                        onChange={(e) => setFormData({ ...formData, notify_other_bookings: e.target.checked })}
+                        disabled={!formData.notifications_enabled}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                    </label>
+                  </div>
+
+                  {/* Notification Option: Court Blocked */}
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex-1">
+                      <label htmlFor="notify-blocked" className="font-medium text-gray-900 cursor-pointer">
+                        Platzsperrungen
+                      </label>
+                      <p className="text-sm text-gray-600">Bei Turnieren, Wartungsarbeiten, etc.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer ml-4">
+                      <input
+                        type="checkbox"
+                        id="notify-blocked"
+                        checked={formData.notify_court_blocked}
+                        onChange={(e) => setFormData({ ...formData, notify_court_blocked: e.target.checked })}
+                        disabled={!formData.notifications_enabled}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                    </label>
+                  </div>
+
+                  {/* Notification Option: Booking Overridden */}
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex-1">
+                      <label htmlFor="notify-overridden" className="font-medium text-gray-900 cursor-pointer">
+                        Stornierung durch Sperrung
+                      </label>
+                      <p className="text-sm text-gray-600">Wenn deine Buchung durch eine Sperrung storniert wird</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer ml-4">
+                      <input
+                        type="checkbox"
+                        id="notify-overridden"
+                        checked={formData.notify_booking_overridden}
+                        onChange={(e) => setFormData({ ...formData, notify_booking_overridden: e.target.checked })}
+                        disabled={!formData.notifications_enabled}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Row 1: Firstname | Lastname */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Vorname</label>
-            <input
-              type="text"
-              value={formData.firstname}
-              onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Nachname</label>
-            <input
-              type="text"
-              value={formData.lastname}
-              onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-          </div>
-
-          {/* Row 2: PLZ | City */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">PLZ</label>
-            <input
-              type="text"
-              value={formData.zip_code}
-              onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="PLZ"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Stadt</label>
-            <input
-              type="text"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Stadt"
-            />
-          </div>
-
-          {/* Row 3: Street (full width) */}
-          <div className="md:col-span-2">
-            <label className="block text-gray-700 font-semibold mb-2">Straße</label>
-            <input
-              type="text"
-              value={formData.street}
-              onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Straße und Hausnummer"
-            />
-          </div>
-
-          {/* Row 4: Email | Phone */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">E-Mail</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              autoComplete="off"
-              required
-            />
-            {/* Email verification badge */}
-            <div className="mt-2">
-              {profile?.email_verified ? (
-                <div className="flex items-center gap-1 text-green-600 text-sm">
-                  <span className="material-icons text-base">verified</span>
-                  <span>Bestätigt</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-orange-600 text-sm">
-                    <span className="material-icons text-base">pending</span>
-                    <span>Nicht bestätigt</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => resendVerificationMutation.mutate()}
-                    disabled={resendVerificationMutation.isPending || resendVerificationMutation.isSuccess}
-                    className={`text-sm underline disabled:opacity-50 ${
-                      resendVerificationMutation.isSuccess
-                        ? 'text-green-600'
-                        : 'text-blue-600 hover:text-blue-800'
-                    }`}
-                  >
-                    {resendVerificationMutation.isPending
-                      ? 'Wird gesendet...'
-                      : resendVerificationMutation.isSuccess
-                        ? 'E-Mail gesendet'
-                        : 'E-Mail erneut senden'}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Telefon</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Telefonnummer"
-            />
-          </div>
-
-          {/* Row 5: Password | Password Confirmation */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Neues Passwort (optional)</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              autoComplete="new-password"
-              placeholder="Leer lassen, um beizubehalten"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Passwort bestätigen</label>
-            <input
-              type="password"
-              value={formData.password_confirm}
-              onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              autoComplete="new-password"
-              placeholder="Leer lassen, um beizubehalten"
-            />
-          </div>
-
-          {/* Notification Preferences Section */}
-          <div className="md:col-span-2 border-t pt-6 mt-6">
-            <h3 className="text-lg font-semibold mb-4 mt-4">E-Mail Benachrichtigungen</h3>
-
-            {/* Master Toggle */}
-            <div className="mb-3">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.notifications_enabled}
-                  onChange={handleNotificationToggle}
-                  className="mr-3 w-5 h-5 accent-green-600"
-                />
-                <span className="font-medium text-gray-800">Benachrichtigungen aktiviert</span>
-              </label>
-            </div>
-
-            {/* Sub-options with visual hierarchy */}
-            <div
-              className="ml-8 pl-4 border-l-2 border-green-400 space-y-2 py-2"
-              style={{ opacity: formData.notifications_enabled ? 1 : 0.5 }}
-            >
-              <p className="text-sm text-gray-500 mb-2">Benachrichtigen bei:</p>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.notify_own_bookings}
-                  onChange={(e) => setFormData({ ...formData, notify_own_bookings: e.target.checked })}
-                  disabled={!formData.notifications_enabled}
-                  className="mr-3 w-4 h-4 accent-green-600"
-                />
-                <span className="text-gray-700">Eigene Buchungen (erstellen, stornieren)</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.notify_other_bookings}
-                  onChange={(e) => setFormData({ ...formData, notify_other_bookings: e.target.checked })}
-                  disabled={!formData.notifications_enabled}
-                  className="mr-3 w-4 h-4 accent-green-600"
-                />
-                <span className="text-gray-700">Buchungen durch andere Mitglieder</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.notify_court_blocked}
-                  onChange={(e) => setFormData({ ...formData, notify_court_blocked: e.target.checked })}
-                  disabled={!formData.notifications_enabled}
-                  className="mr-3 w-4 h-4 accent-green-600"
-                />
-                <span className="text-gray-700">Platzsperrungen (Turniere, Wartung, etc.)</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.notify_booking_overridden}
-                  onChange={(e) => setFormData({ ...formData, notify_booking_overridden: e.target.checked })}
-                  disabled={!formData.notifications_enabled}
-                  className="mr-3 w-4 h-4 accent-green-600"
-                />
-                <span className="text-gray-700">Stornierung meiner Buchung durch Sperrung</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="md:col-span-2 flex justify-end gap-4 mt-4">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="bg-gray-300 text-gray-700 py-2 px-6 rounded hover:bg-gray-400"
-            >
-              Abbrechen
-            </button>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {updateMutation.isPending ? 'Speichern...' : 'Speichern'}
-            </button>
-          </div>
-        </form>
       </div>
     </MainLayout>
   );

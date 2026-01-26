@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Redesign profile page with modern card-based layout (profile card, form sections, toggle switches)
 - Increased navigation icon sizes for better visibility
 
 ### Fixed
