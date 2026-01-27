@@ -1,7 +1,7 @@
 import api from './client';
 import type { Member } from '../types';
 
-// Block type with embedded reason
+// Block type matching API response
 export interface Block {
   id: number;
   court_id: number;
@@ -10,11 +10,8 @@ export interface Block {
   start_time: string;
   end_time: string;
   reason_id: number;
-  reason?: {
-    id: number;
-    name: string;
-    color: string;
-  };
+  reason?: string; // Legacy field (same as reason_name)
+  reason_name?: string;
   comment?: string;
   details?: string;
   batch_id?: string;
@@ -41,7 +38,14 @@ export async function getBlocks(params?: {
   end_date?: string;
   court_id?: number;
 }): Promise<Block[]> {
-  const response = await api.get<{ blocks: Block[] }>('/api/admin/blocks', { params });
+  // Map to server parameter names (date_range_start/date_range_end)
+  const serverParams: Record<string, string | number> = {};
+  if (params?.date) serverParams.date = params.date;
+  if (params?.start_date) serverParams.date_range_start = params.start_date;
+  if (params?.end_date) serverParams.date_range_end = params.end_date;
+  if (params?.court_id) serverParams.court_id = params.court_id;
+
+  const response = await api.get<{ blocks: Block[] }>('/api/admin/blocks', { params: serverParams });
   return response.data.blocks;
 }
 
@@ -52,6 +56,7 @@ export interface CreateBlockData {
   end_time: string;
   reason_id: number;
   details?: string;
+  confirm?: boolean;
 }
 
 export async function createBlocks(data: CreateBlockData): Promise<{ message: string; batch_id: string; blocks: Block[] }> {
@@ -66,6 +71,7 @@ export interface UpdateBatchData {
   end_time: string;
   reason_id: number;
   details?: string;
+  confirm?: boolean;
 }
 
 export async function updateBlockBatch(batchId: string, data: UpdateBatchData): Promise<{ message: string }> {

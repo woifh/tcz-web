@@ -1,9 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
+import { Plus, Calendar, Search, X, AlertTriangle, Clock, Pencil } from 'lucide-react';
 import { MainLayout } from '../../components/layout';
-import { Button, Modal, useToast } from '../../components/ui';
+import { Button, Modal, Alert, useToast } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
+import { CourtGrid } from '../../components/features/blocks/CourtGrid';
+import { BlockListItem } from '../../components/features/blocks/BlockListItem';
 import {
   getBlocks,
   getBlockReasons,
@@ -24,7 +27,7 @@ interface BlockFormData {
   details: string;
 }
 
-interface BlockGroup {
+export interface BlockGroup {
   batchId: string;
   blocks: Block[];
   date: string;
@@ -35,6 +38,27 @@ interface BlockGroup {
   details?: string;
   createdByName?: string;
   isTemporary: boolean;
+}
+
+interface ConflictInfo {
+  batch_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  court_numbers: number[];
+  reason_name: string | null;
+  conflicting_court: number | null;
+  details?: string;
+  created_by_name?: string;
+}
+
+interface ReservationConflict {
+  reservation_id: number;
+  court_number: number;
+  date: string;
+  time: string;
+  booked_for: string;
+  booked_for_id: string;
 }
 
 const getInitialFormData = (): BlockFormData => ({
@@ -54,7 +78,19 @@ export default function CourtBlocking() {
 
   const [formData, setFormData] = useState<BlockFormData>(getInitialFormData);
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
+  const [originalEditInfo, setOriginalEditInfo] = useState<{
+    courts: number[];
+    date: string;
+    start_time: string;
+    end_time: string;
+    reason_name: string;
+    details: string;
+  } | null>(null);
   const [deleteModal, setDeleteModal] = useState<BlockGroup | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [conflictError, setConflictError] = useState<ConflictInfo | null>(null);
+  const [reservationConflicts, setReservationConflicts] = useState<ReservationConflict[] | null>(null);
+  const [pendingConfirmData, setPendingConfirmData] = useState<{ isUpdate: boolean; batchId?: string } | null>(null);
 
   const isAdmin = user?.role === 'administrator';
   const isTeamster = user?.role === 'teamster';
@@ -62,18 +98,12 @@ export default function CourtBlocking() {
   // Check for edit mode from URL
   const editBatchIdFromUrl = searchParams.get('edit');
 
-  // Fetch upcoming blocks (next 30 days)
-  const { today, thirtyDaysLater } = useMemo(() => {
-    const now = new Date();
-    return {
-      today: now.toISOString().split('T')[0],
-      thirtyDaysLater: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    };
-  }, []);
+  // Fetch all blocks from today onwards (no end date limit)
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const { data: blocks, isLoading: blocksLoading } = useQuery({
-    queryKey: ['blocks', 'upcoming', today, thirtyDaysLater],
-    queryFn: () => getBlocks({ start_date: today, end_date: thirtyDaysLater }),
+    queryKey: ['blocks', 'upcoming', today],
+    queryFn: () => getBlocks({ start_date: today }),
   });
 
   // Fetch block reasons
@@ -117,7 +147,7 @@ export default function CourtBlocking() {
         startTime: first.start_time.slice(0, 5),
         endTime: first.end_time.slice(0, 5),
         courtNumbers,
-        reasonName: first.reason?.name || 'Sperrung',
+        reasonName: first.reason_name || 'Sperrung',
         details: first.details || first.comment,
         createdByName: first.created_by_name,
         isTemporary: first.is_temporary || false,
@@ -131,6 +161,19 @@ export default function CourtBlocking() {
       return a.startTime.localeCompare(b.startTime);
     });
   }, [blocks]);
+
+  // Filter blocks by search query
+  const filteredBlockGroups = useMemo(() => {
+    if (!searchQuery.trim()) return blockGroups;
+    const q = searchQuery.toLowerCase();
+    return blockGroups.filter(
+      (g) =>
+        g.reasonName.toLowerCase().includes(q) ||
+        g.details?.toLowerCase().includes(q) ||
+        g.createdByName?.toLowerCase().includes(q) ||
+        g.courtNumbers.some((c) => c.toString().includes(q))
+    );
+  }, [blockGroups, searchQuery]);
 
   // Load edit batch data when editBatchIdFromUrl is set
   useEffect(() => {
@@ -148,15 +191,30 @@ export default function CourtBlocking() {
           reason_id: first.reason_id,
           details: group.details || '',
         });
+        // Store original values for display (only set once when entering edit mode)
+        setOriginalEditInfo((prev) =>
+          prev
+            ? prev
+            : {
+                courts: group.courtNumbers,
+                date: group.date,
+                start_time: group.startTime,
+                end_time: group.endTime,
+                reason_name: group.reasonName,
+                details: group.details || '',
+              }
+        );
         /* eslint-enable react-hooks/set-state-in-effect */
       }
+    } else if (!editBatchIdFromUrl) {
+      // URL param was cleared - reset edit state
+      setEditingBatchId(null);
+      setOriginalEditInfo(null);
     }
   }, [editBatchIdFromUrl, blockGroups]);
 
   // Derive time error from form data (computed, not state)
-  const timeError = formData.start_time && formData.end_time
-    ? formData.start_time >= formData.end_time
-    : false;
+  const timeError = formData.start_time && formData.end_time ? formData.start_time >= formData.end_time : false;
 
   // Check if selected reason is temporary
   const selectedReason = useMemo(() => {
@@ -166,15 +224,54 @@ export default function CourtBlocking() {
 
   const isTemporaryBlock = selectedReason?.is_temporary === true;
 
+  // Helper to extract conflict info from error
+  const extractConflictInfo = (error: unknown): ConflictInfo | null => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const axiosError = error as any;
+    return axiosError?.response?.data?.conflict || null;
+  };
+
+  // Helper to extract reservation conflicts from error
+  const extractReservationConflicts = (error: unknown): ReservationConflict[] | null => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const axiosError = error as any;
+    return axiosError?.response?.data?.reservation_conflicts || null;
+  };
+
+  // Clear conflicts when form data changes
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- Intentional: clear stale conflict state when form inputs change */
+    setConflictError(null);
+    setReservationConflicts(null);
+    setPendingConfirmData(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [formData.courts, formData.date, formData.start_time, formData.end_time]);
+
   // Create blocks mutation (batch)
   const createMutation = useMutation({
     mutationFn: createBlocks,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocks'] });
       queryClient.invalidateQueries({ queryKey: ['availability'] });
+      setConflictError(null);
+      setReservationConflicts(null);
+      setPendingConfirmData(null);
     },
-    onError: () => {
-      showToast('Fehler beim Erstellen der Sperrung', 'error');
+    onError: (error) => {
+      const resConflicts = extractReservationConflicts(error);
+      if (resConflicts) {
+        setReservationConflicts(resConflicts);
+        setPendingConfirmData({ isUpdate: false });
+        return;
+      }
+      const conflict = extractConflictInfo(error);
+      if (conflict) {
+        setConflictError(conflict);
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const axiosError = error as any;
+        showToast(axiosError?.response?.data?.error || 'Fehler beim Erstellen der Sperrung', 'error');
+      }
     },
   });
 
@@ -185,14 +282,30 @@ export default function CourtBlocking() {
       data,
     }: {
       batchId: string;
-      data: { court_ids: number[]; date: string; start_time: string; end_time: string; reason_id: number; details?: string };
+      data: { court_ids: number[]; date: string; start_time: string; end_time: string; reason_id: number; details?: string; confirm?: boolean };
     }) => updateBlockBatch(batchId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocks'] });
       queryClient.invalidateQueries({ queryKey: ['availability'] });
+      setConflictError(null);
+      setReservationConflicts(null);
+      setPendingConfirmData(null);
     },
-    onError: () => {
-      showToast('Fehler beim Aktualisieren der Sperrung', 'error');
+    onError: (error) => {
+      const resConflicts = extractReservationConflicts(error);
+      if (resConflicts) {
+        setReservationConflicts(resConflicts);
+        setPendingConfirmData({ isUpdate: true, batchId: editingBatchId || undefined });
+        return;
+      }
+      const conflict = extractConflictInfo(error);
+      if (conflict) {
+        setConflictError(conflict);
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const axiosError = error as any;
+        showToast(axiosError?.response?.data?.error || 'Fehler beim Aktualisieren der Sperrung', 'error');
+      }
     },
   });
 
@@ -243,9 +356,10 @@ export default function CourtBlocking() {
           },
         });
         showToast('Sperrung aktualisiert', 'success');
+        // Stay in edit mode - user must click Cancel to exit
       } else {
         // Create new blocks as a batch (all courts in one request)
-        await createMutation.mutateAsync({
+        const result = await createMutation.mutateAsync({
           court_ids: formData.courts,
           date: formData.date,
           start_time: formData.start_time,
@@ -254,10 +368,10 @@ export default function CourtBlocking() {
           details: formData.details,
         });
         showToast(isClone ? 'Neue Sperrung erstellt' : 'Sperrung erstellt', 'success');
+        // Enter edit mode for the newly created event
+        setEditingBatchId(result.batch_id);
+        setSearchParams({ edit: result.batch_id });
       }
-
-      // Reset form
-      handleCancel();
     } catch {
       // Error already handled in mutation
     }
@@ -266,6 +380,7 @@ export default function CourtBlocking() {
   const handleCancel = () => {
     setEditingBatchId(null);
     setFormData(getInitialFormData());
+    setOriginalEditInfo(null);
     setSearchParams({});
   };
 
@@ -282,12 +397,50 @@ export default function CourtBlocking() {
     }
   };
 
+  const handleConfirmReservationCancellation = async () => {
+    if (!pendingConfirmData || !formData.reason_id) return;
+
+    try {
+      if (pendingConfirmData.isUpdate && pendingConfirmData.batchId) {
+        // Update with confirmation
+        await updateMutation.mutateAsync({
+          batchId: pendingConfirmData.batchId,
+          data: {
+            court_ids: formData.courts,
+            date: formData.date,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            reason_id: formData.reason_id,
+            details: formData.details,
+            confirm: true,
+          },
+        });
+        showToast('Sperrung aktualisiert', 'success');
+      } else {
+        // Create with confirmation
+        const result = await createMutation.mutateAsync({
+          court_ids: formData.courts,
+          date: formData.date,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          reason_id: formData.reason_id,
+          details: formData.details,
+          confirm: true,
+        });
+        showToast('Sperrung erstellt', 'success');
+        // Enter edit mode for the newly created event
+        setEditingBatchId(result.batch_id);
+        setSearchParams({ edit: result.batch_id });
+      }
+    } catch {
+      // Error already handled in mutation
+    }
+  };
+
   const toggleCourt = (courtId: number) => {
     setFormData((prev) => ({
       ...prev,
-      courts: prev.courts.includes(courtId)
-        ? prev.courts.filter((c) => c !== courtId)
-        : [...prev.courts, courtId],
+      courts: prev.courts.includes(courtId) ? prev.courts.filter((c) => c !== courtId) : [...prev.courts, courtId],
     }));
   };
 
@@ -299,6 +452,13 @@ export default function CourtBlocking() {
     setFormData((prev) => ({ ...prev, courts: [] }));
   };
 
+  const formatCourtsDisplay = (courts: number[]) => {
+    if (courts.length === 1) {
+      return `Platz ${courts[0]}`;
+    }
+    return `Plätze ${courts.join(', ')}`;
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('de-AT', {
@@ -306,13 +466,6 @@ export default function CourtBlocking() {
       month: 'numeric',
       year: 'numeric',
     });
-  };
-
-  const formatCourtsDisplay = (courts: number[]) => {
-    if (courts.length === 1) {
-      return `Platz ${courts[0]}`;
-    }
-    return `Plätze ${courts.join(', ')}`;
   };
 
   const canEditGroup = (group: BlockGroup) => {
@@ -330,110 +483,143 @@ export default function CourtBlocking() {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Platz-Sperrungen</h1>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Platz-Sperrungen</h1>
+          <p className="text-muted-foreground text-sm">Court-Blockierungen verwalten</p>
+        </div>
 
-        {/* Block Form */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {editingBatchId ? (
-            <>
-              <h2 className="text-xl font-semibold mb-4">Sperrung bearbeiten</h2>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-blue-800">
-                  <strong>Bearbeitung:</strong>{' '}
-                  {formatCourtsDisplay(formData.courts)} -{' '}
-                  {new Date(formData.date).toLocaleDateString('de-AT', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}{' '}
-                  {formData.start_time}-{formData.end_time}
-                </p>
-              </div>
-            </>
-          ) : (
-            <h2 className="text-xl font-semibold mb-4">Neue Sperrung erstellen</h2>
-          )}
-
-          <form onSubmit={(e) => handleSubmit(e, false)} className="bg-gray-50 p-6 rounded-lg">
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Left Column: Court Selection */}
-              <div className="lg:w-1/3">
-                <label className="block text-gray-700 font-semibold mb-2">Plätze auswählen</label>
-                <div className="space-y-2">
-                  {COURTS.map((court) => (
-                    <label key={court} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.courts.includes(court)}
-                        onChange={() => toggleCourt(court)}
-                        className="mr-2 h-4 w-4 text-blue-600 rounded border-gray-300"
-                      />
-                      Platz {court}
-                    </label>
-                  ))}
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={selectAllCourts}
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Alle auswählen
-                  </button>
-                  <span className="text-sm text-gray-300">•</span>
-                  <button
-                    type="button"
-                    onClick={clearAllCourts}
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Alle abwählen
-                  </button>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Form Column - Left Side (1/3) */}
+          <div className="lg:col-span-1">
+            <div className="bg-card rounded-lg shadow-sm overflow-hidden border border-border">
+              {/* Header - Blue for edit mode, Green for create */}
+              <div className={editingBatchId ? 'bg-info px-4 py-3' : 'bg-primary px-4 py-3'}>
+                <h2 className="text-white font-semibold flex items-center gap-2">
+                  {editingBatchId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                  {editingBatchId ? 'Sperrung bearbeiten' : 'Neue Sperrung'}
+                </h2>
               </div>
 
-              {/* Right Column: Date, Time, Reason, Details */}
-              <div className="lg:w-2/3 space-y-4">
-                {/* Date & Time */}
-                <div className="flex flex-wrap gap-4">
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Datum</label>
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="border border-gray-300 rounded px-3 py-2"
-                    />
+              <form onSubmit={(e) => handleSubmit(e, false)} className="p-4 space-y-4">
+                {/* Edit Mode Info - Shows ORIGINAL values, not current form values */}
+                {editingBatchId && originalEditInfo && (
+                  <div className="bg-muted/50 border border-border rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Bearbeitung
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
+                        title="Bearbeitung abbrechen"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {originalEditInfo.courts.map((court) => (
+                          <span
+                            key={court}
+                            className="px-2 py-0.5 rounded text-xs font-bold bg-primary text-primary-foreground"
+                          >
+                            {court}
+                          </span>
+                        ))}
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-muted text-foreground border border-border">
+                          {originalEditInfo.reason_name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>
+                          {(() => {
+                            const date = new Date(originalEditInfo.date);
+                            const today = new Date();
+                            const tomorrow = new Date(today);
+                            tomorrow.setDate(tomorrow.getDate() + 1);
+                            if (date.toDateString() === today.toDateString()) return 'Heute';
+                            if (date.toDateString() === tomorrow.toDateString()) return 'Morgen';
+                            return date.toLocaleDateString('de-AT', { day: 'numeric', month: 'short', year: 'numeric' });
+                          })()}
+                        </span>
+                        <span>•</span>
+                        <span>{originalEditInfo.start_time} - {originalEditInfo.end_time}</span>
+                      </div>
+                      {originalEditInfo.details && (
+                        <div className="text-xs text-muted-foreground">{originalEditInfo.details}</div>
+                      )}
+                    </div>
                   </div>
+                )}
+
+                {/* Courts */}
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+                    Plätze *
+                  </label>
+                  <CourtGrid
+                    selectedCourts={formData.courts}
+                    onToggle={toggleCourt}
+                    onSelectAll={selectAllCourts}
+                    onClearAll={clearAllCourts}
+                  />
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                    Datum *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="w-full px-2.5 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
+                  />
+                </div>
+
+                {/* Time Row */}
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Von</label>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                      Von *
+                    </label>
                     <input
                       type="time"
                       value={formData.start_time}
                       onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                      className="border border-gray-300 rounded px-3 py-2 w-28"
+                      className="w-full px-2.5 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Bis</label>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                      Bis *
+                    </label>
                     <input
                       type="time"
                       value={formData.end_time}
                       onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                      className="border border-gray-300 rounded px-3 py-2 w-28"
+                      className="w-full px-2.5 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Time Error */}
                 {timeError && (
-                  <div className="text-sm text-red-600">⚠ Endzeit muss nach Startzeit liegen</div>
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Ungültige Zeitspanne
+                  </p>
                 )}
 
                 {/* Reason */}
                 <div>
-                  <label className="block text-gray-700 font-semibold mb-2">
-                    Grund <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                    Grund *
                   </label>
                   <select
                     value={formData.reason_id || ''}
@@ -443,7 +629,7 @@ export default function CourtBlocking() {
                         reason_id: e.target.value ? parseInt(e.target.value, 10) : null,
                       })
                     }
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-2.5 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
                   >
                     <option value="">Grund auswählen...</option>
                     {availableReasons.map((reason) => (
@@ -452,151 +638,218 @@ export default function CourtBlocking() {
                       </option>
                     ))}
                   </select>
-
-                  {/* Temporary block hint */}
-                  {isTemporaryBlock && (
-                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                      <strong>Vorübergehende Sperre:</strong> Bestehende Reservierungen werden pausiert, nicht
-                      storniert. Betroffene Mitglieder werden benachrichtigt. Bei Aufhebung der Sperre werden die
-                      Buchungen automatisch wiederhergestellt.
-                    </div>
-                  )}
                 </div>
+
+                {/* Temporary block warning */}
+                {isTemporaryBlock && (
+                  <Alert variant="warning">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>Reservierungen werden pausiert und können wiederhergestellt werden.</span>
+                  </Alert>
+                )}
 
                 {/* Details */}
                 <div>
-                  <label className="block text-gray-700 font-semibold mb-2">Details (optional)</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                    Details
+                  </label>
                   <input
                     type="text"
                     value={formData.details}
                     onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                    placeholder="z. B. Regen, Reparatur"
+                    className="w-full px-2.5 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
+                    placeholder="Optional..."
                   />
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
-                  {editingBatchId ? (
-                    <>
-                      <Button type="submit" disabled={!isFormValid} isLoading={isPending}>
-                        Sperrung aktualisieren
+                {/* Block Conflict Error */}
+                {conflictError && (
+                  <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-destructive font-semibold text-xs uppercase tracking-wide">
+                      <AlertTriangle className="w-4 h-4" />
+                      Blockierungs-Konflikt
+                    </div>
+                    <p className="text-xs text-destructive/80">
+                      Ein Platz kann nur eine Sperrung zur gleichen Zeit haben!
+                    </p>
+                    <div className="bg-background rounded-md p-2.5 space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        {conflictError.court_numbers.map((court) => (
+                          <span
+                            key={court}
+                            className="px-2 py-0.5 rounded text-xs font-bold bg-primary text-primary-foreground"
+                          >
+                            {court}
+                          </span>
+                        ))}
+                        <span className="text-sm font-medium text-foreground ml-1">
+                          {conflictError.reason_name || 'Sperrung'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(conflictError.date).toLocaleDateString('de-AT', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}{' '}
+                        • {conflictError.start_time} - {conflictError.end_time}
+                      </div>
+                      {conflictError.details && (
+                        <div className="text-xs text-muted-foreground">{conflictError.details}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Reservation Conflict Warning */}
+                {reservationConflicts && reservationConflicts.length > 0 && (
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-warning font-semibold text-xs uppercase tracking-wide">
+                      <AlertTriangle className="w-4 h-4" />
+                      Reservierungen betroffen
+                    </div>
+
+                    <p className="text-xs text-warning/80 font-medium">
+                      Folgende {reservationConflicts.length} Reservierung{reservationConflicts.length > 1 ? 'en' : ''} werden unwiderruflich storniert:
+                    </p>
+
+                    <div className="bg-background rounded-md divide-y divide-border max-h-40 overflow-y-auto">
+                      {reservationConflicts.map((c) => (
+                        <div key={c.reservation_id} className="p-2.5 space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-primary text-primary-foreground">
+                              {c.court_number}
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                              {c.booked_for}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(c.date).toLocaleDateString('de-AT', {
+                              day: 'numeric',
+                              month: 'short',
+                            })} • {c.time} Uhr
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        type="button"
+                        onClick={handleConfirmReservationCancellation}
+                        variant="danger"
+                        isLoading={isPending}
+                        className="flex-1"
+                      >
+                        {reservationConflicts.length} Reservierung{reservationConflicts.length > 1 ? 'en' : ''} stornieren
                       </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setReservationConflicts(null);
+                          setPendingConfirmData(null);
+                        }}
+                        variant="outline"
+                      >
+                        Abbrechen
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button type="submit" disabled={!isFormValid} isLoading={isPending} className="w-full">
+                    <Plus className="w-4 h-4" />
+                    {editingBatchId ? 'Aktualisieren' : 'Erstellen'}
+                  </Button>
+                  {editingBatchId && (
+                    <>
                       <Button
                         type="button"
                         variant="secondary"
                         disabled={!isFormValid}
                         isLoading={isPending}
                         onClick={(e) => handleSubmit(e, true)}
+                        className="w-full"
                       >
                         Als neues Event speichern
                       </Button>
-                      <Button type="button" variant="secondary" onClick={handleCancel}>
+                      <Button type="button" variant="ghost" onClick={handleCancel} className="w-full">
                         Abbrechen
                       </Button>
                     </>
-                  ) : (
-                    <Button type="submit" disabled={!isFormValid} isLoading={isPending}>
-                      Sperrung erstellen
-                    </Button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Blocks List Column - Right Side (2/3) */}
+          <div className="lg:col-span-2">
+            <div className="bg-card rounded-lg shadow-sm overflow-hidden border border-border">
+              {/* Blue Header */}
+              <div className="bg-info px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-white font-semibold flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Kommende Sperrungen
+                  </h2>
+                  <span className="bg-white/20 px-2.5 py-1 rounded-full text-xs text-white font-bold">
+                    {filteredBlockGroups.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Search */}
+              <div className="p-3 bg-muted/50 border-b border-border">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Suche nach Grund, Details, Platz..."
+                    className="w-full pl-9 pr-9 py-2 text-sm border border-input rounded-lg bg-background focus:border-info focus:ring-1 focus:ring-info/20 focus:outline-none"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
               </div>
-            </div>
-          </form>
-        </div>
 
-        {/* Upcoming Blocks List */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold p-6 pb-4">Kommende Sperrungen</h2>
-
-          {blocksLoading ? (
-            <div className="p-4 text-center text-gray-600">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mr-2" />
-              Lade Sperrungen...
-            </div>
-          ) : blockGroups.length > 0 ? (
-            <div className="divide-y divide-gray-200">
-              {blockGroups.map((group) => (
-                <div
-                  key={group.batchId}
-                  className="p-4 hover:bg-gray-50 flex items-center justify-between"
-                >
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                      <span className="font-medium text-gray-900">{formatDate(group.date)}</span>
-                      <span className="text-gray-600">
-                        {group.startTime} - {group.endTime} • {formatCourtsDisplay(group.courtNumbers)} •
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {group.reasonName}
-                        {group.details && ` / ${group.details}`}
-                      </span>
-                      {group.createdByName && (
-                        <span className="text-xs text-gray-400">von {group.createdByName}</span>
-                      )}
-                      {group.isTemporary && (
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                          Vorübergehend
-                        </span>
-                      )}
-                      {group.blocks.length > 1 && (
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {group.blocks.length} Plätze
-                        </span>
-                      )}
-                    </div>
+              {/* Blocks List */}
+              <div className="divide-y divide-border max-h-[calc(100vh-300px)] overflow-y-auto">
+                {blocksLoading ? (
+                  <div className="p-8 text-center">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2" />
+                    <span className="text-muted-foreground">Lade Sperrungen...</span>
                   </div>
-                  {canEditGroup(group) && (
-                    <div className="flex items-center gap-2 ml-4">
-                      <button
-                        onClick={() => handleEdit(group)}
-                        className="text-blue-600 hover:text-blue-900 p-1"
-                        title="Bearbeiten"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setDeleteModal(group)}
-                        className="text-red-600 hover:text-red-900 p-1"
-                        title="Löschen"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                ) : filteredBlockGroups.length > 0 ? (
+                  filteredBlockGroups.map((group) => (
+                    <BlockListItem
+                      key={group.batchId}
+                      group={group}
+                      onEdit={handleEdit}
+                      onDelete={setDeleteModal}
+                      canEdit={canEditGroup(group)}
+                    />
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    {searchQuery ? 'Keine Sperrungen gefunden.' : 'Keine kommenden Sperrungen.'}
+                  </div>
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="p-4 text-center text-gray-600">Keine kommenden Sperrungen gefunden.</div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -605,32 +858,25 @@ export default function CourtBlocking() {
         <Modal isOpen={true} onClose={() => setDeleteModal(null)} title="Sperrung löschen">
           <div className="space-y-4">
             <div className="flex items-center mb-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
+              <div className="flex-shrink-0 w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Möchten Sie diese Sperrung wirklich löschen?</p>
+                <p className="text-sm text-muted-foreground">Möchten Sie diese Sperrung wirklich löschen?</p>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="font-medium text-gray-900">{formatCourtsDisplay(deleteModal.courtNumbers)}</div>
-              <div className="text-sm text-gray-600">
+            <div className="bg-muted rounded-lg p-3">
+              <div className="font-medium text-foreground">{formatCourtsDisplay(deleteModal.courtNumbers)}</div>
+              <div className="text-sm text-muted-foreground">
                 {formatDate(deleteModal.date)} • {deleteModal.startTime} - {deleteModal.endTime}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-muted-foreground">
                 {deleteModal.reasonName}
                 {deleteModal.details && ` • ${deleteModal.details}`}
               </div>
               {deleteModal.blocks.length > 1 && (
-                <div className="text-xs text-blue-600 mt-1">{deleteModal.blocks.length} Plätze betroffen</div>
+                <div className="text-xs text-info mt-1">{deleteModal.blocks.length} Plätze betroffen</div>
               )}
             </div>
 
@@ -641,9 +887,7 @@ export default function CourtBlocking() {
                 isLoading={deleteMutation.isPending}
                 className="flex-1"
               >
-                {deleteModal.blocks.length > 1
-                  ? `${deleteModal.blocks.length} Sperrungen löschen`
-                  : 'Sperrung löschen'}
+                {deleteModal.blocks.length > 1 ? `${deleteModal.blocks.length} Sperrungen löschen` : 'Sperrung löschen'}
               </Button>
               <Button variant="secondary" onClick={() => setDeleteModal(null)} className="flex-1">
                 Abbrechen

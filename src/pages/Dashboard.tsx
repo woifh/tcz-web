@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { Layers } from 'lucide-react';
 import { MainLayout } from '../components/layout';
 import { useToast } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
@@ -64,6 +65,11 @@ interface SlotInfo {
     reason?: string;
     block_id?: number;
     can_cancel?: boolean;
+    underlying_block?: {
+      reason: string;
+      details?: string;
+      block_id: number;
+    };
   };
 }
 
@@ -410,8 +416,20 @@ export default function Dashboard() {
         return name;
       }
       case 'blocked':
-      case 'suspended':
         return slot.details?.reason || 'Gesperrt';
+      case 'suspended': {
+        const reason = slot.details?.reason || 'Gesperrt';
+        const hasUnderlying = !!slot.details?.underlying_block;
+        if (hasUnderlying) {
+          return (
+            <span className="flex items-center gap-1" title={`Darunter: ${slot.details?.underlying_block?.reason}`}>
+              {reason}
+              <Layers className="w-3 h-3 opacity-70 flex-shrink-0" />
+            </span>
+          );
+        }
+        return reason;
+      }
       case 'past':
         return '';
     }
