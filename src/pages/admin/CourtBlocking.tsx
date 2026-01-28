@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Calendar, Search, X, AlertTriangle, Clock, Pencil } from 'lucide-react';
 import { MainLayout } from '../../components/layout';
 import { Button, Modal, Alert, useToast } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
@@ -497,7 +496,7 @@ export default function CourtBlocking() {
               {/* Header - Blue for edit mode, Green for create */}
               <div className={editingBatchId ? 'bg-info px-4 py-3' : 'bg-primary px-4 py-3'}>
                 <h2 className="text-white font-semibold flex items-center gap-2">
-                  {editingBatchId ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                  {editingBatchId ? <span className="material-icons text-xl">edit</span> : <span className="material-icons text-xl">add</span>}
                   {editingBatchId ? 'Sperrung bearbeiten' : 'Neue Sperrung'}
                 </h2>
               </div>
@@ -516,7 +515,7 @@ export default function CourtBlocking() {
                         className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
                         title="Bearbeitung abbrechen"
                       >
-                        <X className="w-4 h-4" />
+                        <span className="material-icons text-base">close</span>
                       </button>
                     </div>
                     <div className="p-3 space-y-2">
@@ -534,7 +533,7 @@ export default function CourtBlocking() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3.5 h-3.5" />
+                        <span className="material-icons text-sm">schedule</span>
                         <span>
                           {(() => {
                             const date = new Date(originalEditInfo.date);
@@ -611,7 +610,7 @@ export default function CourtBlocking() {
                 {/* Time Error */}
                 {timeError && (
                   <p className="text-xs text-destructive flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
+                    <span className="material-icons text-xs">warning</span>
                     Ungültige Zeitspanne
                   </p>
                 )}
@@ -643,7 +642,7 @@ export default function CourtBlocking() {
                 {/* Temporary block warning */}
                 {isTemporaryBlock && (
                   <Alert variant="warning">
-                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="material-icons text-sm flex-shrink-0">warning</span>
                     <span>Reservierungen werden pausiert und können wiederhergestellt werden.</span>
                   </Alert>
                 )}
@@ -666,7 +665,7 @@ export default function CourtBlocking() {
                 {conflictError && (
                   <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 space-y-2">
                     <div className="flex items-center gap-2 text-destructive font-semibold text-xs uppercase tracking-wide">
-                      <AlertTriangle className="w-4 h-4" />
+                      <span className="material-icons text-base">warning</span>
                       Blockierungs-Konflikt
                     </div>
                     <p className="text-xs text-destructive/80">
@@ -705,7 +704,7 @@ export default function CourtBlocking() {
                 {reservationConflicts && reservationConflicts.length > 0 && (
                   <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
                     <div className="flex items-center gap-2 text-warning font-semibold text-xs uppercase tracking-wide">
-                      <AlertTriangle className="w-4 h-4" />
+                      <span className="material-icons text-base">warning</span>
                       Reservierungen betroffen
                     </div>
 
@@ -761,7 +760,7 @@ export default function CourtBlocking() {
                 {/* Buttons */}
                 <div className="flex flex-col gap-2 pt-2">
                   <Button type="submit" disabled={!isFormValid} isLoading={isPending} className="w-full">
-                    <Plus className="w-4 h-4" />
+                    <span className="material-icons text-base">add</span>
                     {editingBatchId ? 'Aktualisieren' : 'Erstellen'}
                   </Button>
                   {editingBatchId && (
@@ -793,7 +792,7 @@ export default function CourtBlocking() {
               <div className="bg-info px-4 py-3">
                 <div className="flex items-center justify-between">
                   <h2 className="text-white font-semibold flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
+                    <span className="material-icons text-xl">event</span>
                     Kommende Sperrungen
                   </h2>
                   <span className="bg-white/20 px-2.5 py-1 rounded-full text-xs text-white font-bold">
@@ -805,7 +804,7 @@ export default function CourtBlocking() {
               {/* Search */}
               <div className="p-3 bg-muted/50 border-b border-border">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">search</span>
                   <input
                     type="text"
                     value={searchQuery}
@@ -819,7 +818,7 @@ export default function CourtBlocking() {
                       onClick={() => setSearchQuery('')}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      <X className="w-4 h-4" />
+                      <span className="material-icons text-base">close</span>
                     </button>
                   )}
                 </div>
@@ -859,7 +858,7 @@ export default function CourtBlocking() {
           <div className="space-y-4">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0 w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-destructive" />
+                <span className="material-icons text-2xl text-destructive">warning</span>
               </div>
               <div className="ml-4">
                 <p className="text-sm text-muted-foreground">Möchten Sie diese Sperrung wirklich löschen?</p>

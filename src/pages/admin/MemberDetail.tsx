@@ -225,7 +225,7 @@ export default function MemberDetail() {
   if (!isCreateMode && isLoading) {
     return (
       <MainLayout>
-        <div className="text-center py-8 text-gray-500">Laden...</div>
+        <div className="text-center py-8 text-muted-foreground">Laden...</div>
       </MainLayout>
     );
   }
@@ -233,8 +233,8 @@ export default function MemberDetail() {
   if (!isCreateMode && isError) {
     return (
       <MainLayout>
-        <div className="bg-red-50 rounded-lg p-8 text-center">
-          <p className="text-red-600 mb-4">Mitglied nicht gefunden</p>
+        <div className="bg-destructive/10 rounded-lg p-8 text-center">
+          <p className="text-destructive mb-4">Mitglied nicht gefunden</p>
           <Button variant="secondary" onClick={() => navigate('/admin/members')}>
             Zurueck zur Liste
           </Button>
@@ -252,21 +252,21 @@ export default function MemberDetail() {
             <Button variant="secondary" onClick={() => navigate('/admin/members')}>
               &larr; Zurueck
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-foreground">
               {isCreateMode ? 'Neues Mitglied' : `${member?.firstname} ${member?.lastname}`}
             </h1>
           </div>
           {!isCreateMode && member && (
             <div className="flex items-center gap-2">
               {member.is_active ? (
-                <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">Aktiv</span>
+                <span className="px-2 py-1 text-xs rounded bg-success/20 text-success">Aktiv</span>
               ) : (
-                <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Inaktiv</span>
+                <span className="px-2 py-1 text-xs rounded bg-muted text-muted-foreground">Inaktiv</span>
               )}
               {member.email_verified ? (
-                <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">Verifiziert</span>
+                <span className="px-2 py-1 text-xs rounded bg-info/20 text-info">Verifiziert</span>
               ) : (
-                <span className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">
+                <span className="px-2 py-1 text-xs rounded bg-warning/20 text-warning">
                   Nicht verifiziert
                 </span>
               )}
@@ -275,10 +275,10 @@ export default function MemberDetail() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-card rounded-lg shadow-sm border border-border p-6 space-y-6">
           {/* Personal Info */}
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Persoenliche Daten</h2>
+            <h2 className="text-lg font-medium text-foreground mb-4">Persoenliche Daten</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="Vorname"
@@ -311,7 +311,7 @@ export default function MemberDetail() {
           {/* Password (only for create) */}
           {isCreateMode && (
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Passwort</h2>
+              <h2 className="text-lg font-medium text-foreground mb-4">Passwort</h2>
               <div className="max-w-sm">
                 <Input
                   label="Passwort"
@@ -326,7 +326,7 @@ export default function MemberDetail() {
 
           {/* Address */}
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Adresse</h2>
+            <h2 className="text-lg font-medium text-foreground mb-4">Adresse</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <Input
@@ -350,10 +350,10 @@ export default function MemberDetail() {
 
           {/* Admin Settings */}
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Einstellungen</h2>
+            <h2 className="text-lg font-medium text-foreground mb-4">Einstellungen</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Rolle</label>
                 <select
                   value={formData.role}
                   onChange={(e) =>
@@ -367,7 +367,7 @@ export default function MemberDetail() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mitgliedschaft</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Mitgliedschaft</label>
                 <select
                   value={formData.membership_type}
                   onChange={(e) =>
@@ -385,9 +385,9 @@ export default function MemberDetail() {
                     type="checkbox"
                     checked={formData.fee_paid}
                     onChange={(e) => handleInputChange('fee_paid', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 rounded"
+                    className="h-4 w-4 text-primary rounded"
                   />
-                  <span className="text-sm text-gray-700">Mitgliedsbeitrag bezahlt</span>
+                  <span className="text-sm text-foreground">Mitgliedsbeitrag bezahlt</span>
                 </label>
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function MemberDetail() {
           <div className="flex justify-between items-center pt-4 border-t">
             <div>
               {hasChanges && !isCreateMode && (
-                <span className="text-sm text-orange-600">Ungespeicherte Aenderungen</span>
+                <span className="text-sm text-warning">Ungespeicherte Aenderungen</span>
               )}
             </div>
             <div className="flex gap-2">
@@ -417,15 +417,15 @@ export default function MemberDetail() {
 
         {/* Actions (only in edit mode) */}
         {!isCreateMode && member && (
-          <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">Aktionen</h2>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6 space-y-4">
+            <h2 className="text-lg font-medium text-foreground">Aktionen</h2>
 
             {/* Email verification */}
             {!member.email_verified && (
-              <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-warning/10 rounded-lg">
                 <div>
-                  <p className="font-medium text-yellow-800">E-Mail nicht verifiziert</p>
-                  <p className="text-sm text-yellow-600">
+                  <p className="font-medium text-warning">E-Mail nicht verifiziert</p>
+                  <p className="text-sm text-warning/80">
                     Verifizierungs-E-Mail erneut senden
                   </p>
                 </div>
@@ -441,12 +441,12 @@ export default function MemberDetail() {
             )}
 
             {/* Activate/Deactivate */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div>
-                <p className="font-medium text-gray-800">
+                <p className="font-medium text-foreground">
                   {member.is_active ? 'Mitglied deaktivieren' : 'Mitglied reaktivieren'}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {member.is_active
                     ? 'Deaktivierte Mitglieder koennen sich nicht anmelden'
                     : 'Reaktiviert den Zugang zum System'}
@@ -469,10 +469,10 @@ export default function MemberDetail() {
             </div>
 
             {/* Delete */}
-            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg">
               <div>
-                <p className="font-medium text-red-800">Mitglied loeschen</p>
-                <p className="text-sm text-red-600">
+                <p className="font-medium text-destructive">Mitglied loeschen</p>
+                <p className="text-sm text-destructive">
                   Diese Aktion kann nicht rueckgaengig gemacht werden
                 </p>
               </div>
@@ -485,11 +485,11 @@ export default function MemberDetail() {
 
         {/* Member Info (only in edit mode) */}
         {!isCreateMode && member && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Informationen</h2>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
+            <h2 className="text-lg font-medium text-foreground mb-4">Informationen</h2>
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <dt className="text-gray-500">Mitglied seit</dt>
+                <dt className="text-muted-foreground">Mitglied seit</dt>
                 <dd className="font-medium">
                   {member.member_since
                     ? new Date(member.member_since).toLocaleDateString('de-AT')
@@ -497,7 +497,7 @@ export default function MemberDetail() {
                 </dd>
               </div>
               <div>
-                <dt className="text-gray-500">E-Mail verifiziert am</dt>
+                <dt className="text-muted-foreground">E-Mail verifiziert am</dt>
                 <dd className="font-medium">
                   {member.email_verified_at
                     ? new Date(member.email_verified_at).toLocaleDateString('de-AT')
@@ -505,7 +505,7 @@ export default function MemberDetail() {
                 </dd>
               </div>
               <div>
-                <dt className="text-gray-500">Mitglieds-ID</dt>
+                <dt className="text-muted-foreground">Mitglieds-ID</dt>
                 <dd className="font-mono text-xs">{member.id}</dd>
               </div>
             </dl>
@@ -516,12 +516,12 @@ export default function MemberDetail() {
       {/* Delete Confirmation Modal */}
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Mitglied loeschen?">
         <div className="space-y-4">
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Moechtest du <strong>{member?.firstname} {member?.lastname}</strong> wirklich loeschen?
           </p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm text-red-700 font-medium mb-1">Achtung!</p>
-            <ul className="text-sm text-red-600 space-y-1">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+            <p className="text-sm text-destructive font-medium mb-1">Achtung!</p>
+            <ul className="text-sm text-destructive space-y-1">
               <li>Alle Buchungen werden storniert</li>
               <li>Alle Daten werden geloescht</li>
               <li>Diese Aktion kann nicht rueckgaengig gemacht werden</li>
@@ -549,10 +549,10 @@ export default function MemberDetail() {
         title="Mitglied deaktivieren?"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Moechtest du <strong>{member?.firstname} {member?.lastname}</strong> wirklich deaktivieren?
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Deaktivierte Mitglieder koennen sich nicht mehr anmelden. Die Daten bleiben erhalten.
           </p>
           <div className="flex justify-end gap-2 pt-2">

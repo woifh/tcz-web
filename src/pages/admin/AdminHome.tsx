@@ -142,22 +142,22 @@ export default function AdminHome() {
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, string> = {
-      blue: 'bg-blue-50 hover:bg-blue-100 border-blue-200',
-      red: 'bg-red-50 hover:bg-red-100 border-red-200',
-      purple: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
-      gray: 'bg-gray-50 hover:bg-gray-100 border-gray-200',
-      green: 'bg-green-50 hover:bg-green-100 border-green-200',
+      blue: 'bg-info/10 hover:bg-info/20 border-info/30',
+      red: 'bg-destructive/10 hover:bg-destructive/20 border-destructive/30',
+      purple: 'bg-primary/10 hover:bg-primary/20 border-primary/30',
+      gray: 'bg-muted hover:bg-muted/80 border-border',
+      green: 'bg-success/10 hover:bg-success/20 border-success/30',
     };
     return colors[color] || colors.gray;
   };
 
   const getIconColor = (color: string) => {
     const colors: Record<string, string> = {
-      blue: 'text-blue-600',
-      red: 'text-red-600',
-      purple: 'text-purple-600',
-      gray: 'text-gray-600',
-      green: 'text-green-600',
+      blue: 'text-info',
+      red: 'text-destructive',
+      purple: 'text-primary',
+      gray: 'text-muted-foreground',
+      green: 'text-success',
     };
     return colors[color] || colors.gray;
   };
@@ -165,32 +165,32 @@ export default function AdminHome() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Administration</h1>
+        <h1 className="text-2xl font-bold text-foreground">Administration</h1>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-sm text-gray-500">Mitglieder</div>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div className="text-2xl font-bold text-foreground">{stats.total}</div>
+            <div className="text-sm text-muted-foreground">Mitglieder</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-            <div className="text-sm text-gray-500">Aktiv</div>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div className="text-2xl font-bold text-success">{stats.active}</div>
+            <div className="text-sm text-muted-foreground">Aktiv</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-2xl font-bold text-red-600">{stats.unpaid}</div>
-            <div className="text-sm text-gray-500">Unbezahlt</div>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div className="text-2xl font-bold text-destructive">{stats.unpaid}</div>
+            <div className="text-sm text-muted-foreground">Unbezahlt</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
-            <div className="text-sm text-gray-500">Ausstehend</div>
+          <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div className="text-2xl font-bold text-warning">{stats.pending}</div>
+            <div className="text-sm text-muted-foreground">Ausstehend</div>
           </div>
         </div>
 
         {/* Payment Deadline Widget */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Zahlungsfrist</h2>
+            <h2 className="text-lg font-medium text-foreground">Zahlungsfrist</h2>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={() => setShowDeadlineModal(true)}>
                 {deadlineData?.deadline ? 'Aendern' : 'Setzen'}
@@ -210,7 +210,7 @@ export default function AdminHome() {
           {deadlineData?.deadline ? (
             <div className="flex items-center gap-4">
               <div
-                className={`text-lg font-medium ${deadlineData.is_past ? 'text-red-600' : 'text-gray-900'}`}
+                className={`text-lg font-medium ${deadlineData.is_past ? 'text-destructive' : 'text-foreground'}`}
               >
                 {new Date(deadlineData.deadline).toLocaleDateString('de-AT', {
                   weekday: 'long',
@@ -223,10 +223,10 @@ export default function AdminHome() {
                 <span
                   className={`px-2 py-1 text-sm rounded ${
                     deadlineData.is_past
-                      ? 'bg-red-100 text-red-700'
+                      ? 'bg-destructive/20 text-destructive'
                       : deadlineData.days_until <= 7
-                        ? 'bg-orange-100 text-orange-700'
-                        : 'bg-green-100 text-green-700'
+                        ? 'bg-warning/20 text-warning'
+                        : 'bg-success/20 text-success'
                   }`}
                 >
                   {deadlineData.is_past
@@ -238,27 +238,27 @@ export default function AdminHome() {
               )}
             </div>
           ) : (
-            <p className="text-gray-500">Keine Zahlungsfrist gesetzt</p>
+            <p className="text-muted-foreground">Keine Zahlungsfrist gesetzt</p>
           )}
         </div>
 
         {/* Pending Payment Confirmations */}
         {pendingData && pendingData.count > 0 && (
-          <div className="bg-orange-50 rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-medium text-orange-900 mb-4">
+          <div className="bg-warning/10 rounded-lg shadow-sm border border-warning/20 p-6">
+            <h2 className="text-lg font-medium text-warning mb-4">
               Ausstehende Zahlungsbestaetigungen ({pendingData.count})
             </h2>
             <div className="space-y-3">
               {pendingData.members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between bg-white rounded-lg p-4"
+                  className="flex items-center justify-between bg-card rounded-lg p-4 border border-border"
                 >
                   <div>
                     <div className="font-medium">{member.name}</div>
-                    <div className="text-sm text-gray-500">{member.email}</div>
+                    <div className="text-sm text-muted-foreground">{member.email}</div>
                     {member.payment_confirmation_requested_at && (
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-muted-foreground/70">
                         Angefragt am{' '}
                         {new Date(member.payment_confirmation_requested_at).toLocaleDateString('de-AT')}
                       </div>
@@ -296,7 +296,7 @@ export default function AdminHome() {
               className={`text-left p-6 rounded-lg border transition-colors ${getColorClasses(card.color)}`}
             >
               <div className="flex items-start gap-4">
-                <div className={`p-2 rounded-lg bg-white ${getIconColor(card.color)}`}>
+                <div className={`p-2 rounded-lg bg-card ${getIconColor(card.color)}`}>
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -308,8 +308,8 @@ export default function AdminHome() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">{card.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{card.description}</p>
+                  <h3 className="font-medium text-foreground">{card.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{card.description}</p>
                 </div>
               </div>
             </button>

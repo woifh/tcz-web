@@ -20,9 +20,9 @@ function SortIndicator({
   sortDirection: SortDirection;
 }) {
   if (sortField !== field) {
-    return <span className="text-gray-300 ml-1">↕</span>;
+    return <span className="text-muted-foreground/50 ml-1">↕</span>;
   }
-  return <span className="text-blue-600 ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+  return <span className="text-primary ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
 }
 
 export default function Members() {
@@ -157,9 +157,9 @@ export default function Members() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'administrator':
-        return <span className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700">Admin</span>;
+        return <span className="px-2 py-1 text-xs rounded bg-primary/20 text-primary">Admin</span>;
       case 'teamster':
-        return <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">Teamleiter</span>;
+        return <span className="px-2 py-1 text-xs rounded bg-info/20 text-info">Teamleiter</span>;
       default:
         return null;
     }
@@ -177,7 +177,7 @@ export default function Members() {
     <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Mitglieder</h1>
+          <h1 className="text-2xl font-bold text-foreground">Mitglieder</h1>
           <Button
             onClick={() => navigate('/admin/members/new')}
             data-testid="create-member-btn"
@@ -187,7 +187,7 @@ export default function Members() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -222,15 +222,15 @@ export default function Members() {
                 key={tab.key}
                 className={`pb-3 px-1 border-b-2 transition-colors ${
                   activeTab === tab.key
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
                 onClick={() => setActiveTab(tab.key)}
                 data-testid={`tab-${tab.key}`}
               >
                 {tab.label}{' '}
                 {tab.highlight ? (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-warning/20 text-warning">
                     {tab.count}
                   </span>
                 ) : (
@@ -243,41 +243,41 @@ export default function Members() {
 
         {/* Members List */}
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">Laden...</div>
+          <div className="text-center py-8 text-muted-foreground">Laden...</div>
         ) : filteredMembers.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center text-gray-500">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-8 text-center text-muted-foreground">
             Keine Mitglieder gefunden
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 border-b">
+                <tr className="bg-muted border-b">
                   <th
-                    className="px-4 py-3 text-left text-sm font-medium text-gray-500 cursor-pointer hover:bg-gray-100 select-none"
+                    className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:bg-muted/80 select-none"
                     onClick={() => handleSort('name')}
                   >
                     Mitglied <SortIndicator field="name" sortField={sortField} sortDirection={sortDirection} />
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-sm font-medium text-gray-500 hidden sm:table-cell cursor-pointer hover:bg-gray-100 select-none"
+                    className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell cursor-pointer hover:bg-muted/80 select-none"
                     onClick={() => handleSort('email')}
                   >
                     E-Mail <SortIndicator field="email" sortField={sortField} sortDirection={sortDirection} />
                   </th>
                   <th
-                    className="px-4 py-3 text-center text-sm font-medium text-gray-500 cursor-pointer hover:bg-gray-100 select-none"
+                    className="px-4 py-3 text-center text-sm font-medium text-muted-foreground cursor-pointer hover:bg-muted/80 select-none"
                     onClick={() => handleSort('is_active')}
                   >
                     Status <SortIndicator field="is_active" sortField={sortField} sortDirection={sortDirection} />
                   </th>
                   <th
-                    className="px-4 py-3 text-center text-sm font-medium text-gray-500 hidden sm:table-cell cursor-pointer hover:bg-gray-100 select-none"
+                    className="px-4 py-3 text-center text-sm font-medium text-muted-foreground hidden sm:table-cell cursor-pointer hover:bg-muted/80 select-none"
                     onClick={() => handleSort('fee_paid')}
                   >
                     Beitrag <SortIndicator field="fee_paid" sortField={sortField} sortDirection={sortDirection} />
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">Aktionen</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Aktionen</th>
                 </tr>
               </thead>
               <tbody>
@@ -285,8 +285,8 @@ export default function Members() {
                   <tr key={member.id} className="border-b last:border-b-0" data-testid={`member-${member.id}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-sm font-medium text-muted-foreground">
                             {member.firstname[0]}{member.lastname[0]}
                           </span>
                         </div>
@@ -295,7 +295,7 @@ export default function Members() {
                             {member.firstname} {member.lastname}
                             {getRoleBadge(member.role)}
                           </div>
-                          <div className="text-sm text-gray-500 sm:hidden">
+                          <div className="text-sm text-muted-foreground sm:hidden">
                             {member.email}
                           </div>
                         </div>
@@ -304,18 +304,18 @@ export default function Members() {
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <a
                         href={`mailto:${member.email}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-primary hover:underline"
                       >
                         {member.email}
                       </a>
                     </td>
                     <td className="px-4 py-3 text-center">
                       {member.is_active ? (
-                        <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                        <span className="px-2 py-1 text-xs rounded bg-success/20 text-success">
                           Aktiv
                         </span>
                       ) : (
-                        <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+                        <span className="px-2 py-1 text-xs rounded bg-muted text-muted-foreground">
                           Inaktiv
                         </span>
                       )}
@@ -326,19 +326,19 @@ export default function Members() {
                         switch (status) {
                           case 'paid':
                             return (
-                              <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              <span className="px-2 py-1 text-xs rounded bg-success/20 text-success">
                                 Bezahlt
                               </span>
                             );
                           case 'pending':
                             return (
-                              <span className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">
+                              <span className="px-2 py-1 text-xs rounded bg-warning/20 text-warning">
                                 Ausstehend
                               </span>
                             );
                           default:
                             return (
-                              <span className="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              <span className="px-2 py-1 text-xs rounded bg-destructive/20 text-destructive">
                                 Unbezahlt
                               </span>
                             );
@@ -365,7 +365,7 @@ export default function Members() {
         )}
 
         {/* Pagination info */}
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-muted-foreground text-center">
           {filteredMembers.length} von {stats.total} Mitgliedern
         </div>
       </div>

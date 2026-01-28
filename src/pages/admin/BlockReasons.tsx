@@ -43,7 +43,7 @@ function formatDateTime(isoString: string): string {
 function SortIndicator({ field, sortField }: { field: SortField; sortField: SortField }) {
   const isActive = sortField === field;
   return (
-    <svg className={`w-4 h-4 inline ml-1 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className={`w-4 h-4 inline ml-1 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
     </svg>
   );
@@ -200,14 +200,14 @@ export default function BlockReasons() {
 
   return (
     <MainLayout>
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-6">
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <span className="material-icons">category</span>
             Sperrungsgründe verwalten
           </h2>
-          <p className="text-gray-600 mt-1">Anpassbare Gründe für Sperrungen erstellen und bearbeiten</p>
+          <p className="text-muted-foreground mt-1">Anpassbare Gründe für Sperrungen erstellen und bearbeiten</p>
         </div>
 
         {/* Action Bar */}
@@ -220,7 +220,7 @@ export default function BlockReasons() {
                 setShowForm(true);
               }}
               data-testid="create-reason-btn"
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-primary hover:bg-primary/90"
             >
               <span className="material-icons text-sm mr-1">add</span>
               Neuen Grund erstellen
@@ -228,20 +228,20 @@ export default function BlockReasons() {
 
             {/* Search */}
             <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
+              <span className="material-icons absolute left-3 top-2.5 text-muted-foreground text-sm">search</span>
               <input
                 type="text"
                 placeholder="Gründe durchsuchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 data-testid="reason-search-input"
               />
             </div>
           </div>
 
           {/* Status Indicator */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="material-icons text-sm">info</span>
             <span>{filteredAndSortedReasons.length} Gründe gefunden</span>
           </div>
@@ -250,8 +250,8 @@ export default function BlockReasons() {
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-3 text-gray-600">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               <span>Lade Sperrungsgründe...</span>
             </div>
           </div>
@@ -259,8 +259,8 @@ export default function BlockReasons() {
 
         {/* Error State */}
         {isError && !isLoading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-2 text-red-700">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-2 text-destructive">
               <span className="material-icons text-sm mt-0.5">error</span>
               <div>
                 <span>{(error as Error)?.message || 'Fehler beim Laden der Sperrgründe'}</span>
@@ -280,55 +280,55 @@ export default function BlockReasons() {
 
         {/* Table */}
         {!isLoading && !isError && (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       <button
                         onClick={() => handleSort('name')}
-                        className="flex items-center gap-1 hover:text-gray-700"
+                        className="flex items-center gap-1 hover:text-foreground"
                       >
                         Grund
                         <SortIndicator field="name" sortField={sortField} />
                       </button>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       <button
                         onClick={() => handleSort('usage_count')}
-                        className="flex items-center gap-1 hover:text-gray-700"
+                        className="flex items-center gap-1 hover:text-foreground"
                       >
                         Verwendungen
                         <SortIndicator field="usage_count" sortField={sortField} />
                       </button>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Berechtigung
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Erstellt von
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       <button
                         onClick={() => handleSort('created_at')}
-                        className="flex items-center gap-1 hover:text-gray-700"
+                        className="flex items-center gap-1 hover:text-foreground"
                       >
                         Erstellt am
                         <SortIndicator field="created_at" sortField={sortField} />
                       </button>
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Aktionen
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-card divide-y divide-border">
                   {filteredAndSortedReasons.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                         <div className="flex flex-col items-center gap-3">
-                          <span className="material-icons text-4xl text-gray-300">category</span>
+                          <span className="material-icons text-4xl text-muted-foreground/50">category</span>
                           <div>
                             <p className="text-lg font-medium">Keine Sperrungsgründe gefunden</p>
                             <p className="text-sm">Erstelle den ersten Grund, um zu beginnen.</p>
@@ -340,27 +340,27 @@ export default function BlockReasons() {
                     filteredAndSortedReasons.map((reason) => (
                       <tr
                         key={reason.id}
-                        className={`hover:bg-gray-50 transition-colors ${!reason.is_active ? 'opacity-60 bg-gray-50' : ''}`}
+                        className={`hover:bg-muted transition-colors ${!reason.is_active ? 'opacity-60 bg-muted' : ''}`}
                         data-testid={`reason-${reason.id}`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <span className={`text-sm font-medium ${reason.is_active ? 'text-gray-900' : 'text-gray-500 line-through'}`}>
+                            <span className={`text-sm font-medium ${reason.is_active ? 'text-foreground' : 'text-muted-foreground line-through'}`}>
                               {reason.name}
                             </span>
                             {reason.is_temporary && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning/20 text-warning">
                                 Vorübergehend
                               </span>
                             )}
                             {!reason.is_active && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-600">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
                                 Inaktiv
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {reason.usage_count}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -369,15 +369,15 @@ export default function BlockReasons() {
                               type="checkbox"
                               checked={reason.teamster_usable}
                               disabled
-                              className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded opacity-60"
+                              className="w-4 h-4 text-primary bg-muted border-input rounded opacity-60"
                             />
-                            <span className="text-sm text-gray-700">Mannschaftsführer</span>
+                            <span className="text-sm text-foreground">Mannschaftsführer</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {reason.created_by}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                           {formatDateTime(reason.created_at)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -386,7 +386,7 @@ export default function BlockReasons() {
                               <>
                                 <button
                                   onClick={() => handleEdit(reason)}
-                                  className="text-blue-600 hover:text-blue-900 p-2 rounded hover:bg-blue-50 transition-colors"
+                                  className="text-primary hover:text-primary/80 p-2 rounded hover:bg-primary/10 transition-colors"
                                   title="Bearbeiten"
                                   data-testid={`edit-reason-${reason.id}`}
                                 >
@@ -396,7 +396,7 @@ export default function BlockReasons() {
                                 </button>
                                 <button
                                   onClick={() => setDeleteModal(reason)}
-                                  className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50 transition-colors"
+                                  className="text-destructive hover:text-destructive/80 p-2 rounded hover:bg-destructive/10 transition-colors"
                                   title="Löschen"
                                   data-testid={`delete-reason-${reason.id}`}
                                 >
@@ -445,10 +445,10 @@ export default function BlockReasons() {
                 type="checkbox"
                 checked={formData.teamster_usable}
                 onChange={(e) => setFormData({ ...formData, teamster_usable: e.target.checked })}
-                className="h-4 w-4 text-blue-600 rounded"
+                className="h-4 w-4 text-primary rounded"
                 data-testid="teamster-usable-checkbox"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-foreground">
                 Mannschaftsführer dürfen diesen Grund verwenden
               </span>
             </label>
@@ -458,10 +458,10 @@ export default function BlockReasons() {
                 type="checkbox"
                 checked={formData.is_temporary}
                 onChange={(e) => setFormData({ ...formData, is_temporary: e.target.checked })}
-                className="h-4 w-4 text-blue-600 rounded"
+                className="h-4 w-4 text-primary rounded"
                 data-testid="is-temporary-checkbox"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-foreground">
                 Vorübergehende Sperrung (Buchungen werden suspendiert)
               </span>
             </label>
@@ -499,24 +499,24 @@ export default function BlockReasons() {
           title="Sperrgrund löschen?"
         >
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
               <div>
                 <div className="font-medium">{deleteModal.name}</div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {deleteModal.usage_count} Verwendungen
                 </div>
               </div>
             </div>
             {deleteModal.usage_count > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-700">
+              <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+                <p className="text-sm text-warning">
                   Dieser Grund wird aktuell verwendet und kann daher nur deaktiviert werden.
                 </p>
               </div>
             )}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-700 font-medium mb-1">Achtung!</p>
-              <ul className="text-sm text-red-600 space-y-1">
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+              <p className="text-sm text-destructive font-medium mb-1">Achtung!</p>
+              <ul className="text-sm text-destructive space-y-1">
                 <li>• Diese Aktion kann nicht rückgängig gemacht werden</li>
               </ul>
             </div>

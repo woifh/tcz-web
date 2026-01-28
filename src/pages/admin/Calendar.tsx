@@ -75,12 +75,12 @@ export default function Calendar() {
     <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Kalender</h1>
+          <h1 className="text-2xl font-bold text-foreground">Kalender</h1>
           <Button onClick={() => navigate('/admin/blocks')}>Neue Sperrung</Button>
         </div>
 
         {/* Month Navigation */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4">
           <div className="flex items-center justify-between mb-4">
             <Button variant="secondary" onClick={prevMonth}>
               &larr; Vorher
@@ -95,12 +95,12 @@ export default function Calendar() {
 
           {/* Calendar Grid */}
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Laden...</div>
+            <div className="text-center py-8 text-muted-foreground">Laden...</div>
           ) : (
             <div className="grid grid-cols-7 gap-1">
               {/* Week day headers */}
               {weekDays.map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
                   {day}
                 </div>
               ))}
@@ -108,7 +108,7 @@ export default function Calendar() {
               {/* Calendar days */}
               {calendarDays.map((date, index) => {
                 if (!date) {
-                  return <div key={`empty-${index}`} className="h-24 bg-gray-50 rounded" />;
+                  return <div key={`empty-${index}`} className="h-24 bg-muted rounded" />;
                 }
 
                 const dateStr = date.toISOString().split('T')[0];
@@ -119,11 +119,11 @@ export default function Calendar() {
                   <div
                     key={dateStr}
                     className={`h-24 border rounded p-1 overflow-hidden ${
-                      isToday ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                      isToday ? 'border-primary bg-primary/10' : 'border-border'
                     }`}
                   >
                     <div
-                      className={`text-sm font-medium mb-1 ${isToday ? 'text-blue-600' : 'text-gray-700'}`}
+                      className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : 'text-foreground'}`}
                     >
                       {date.getDate()}
                     </div>
@@ -132,14 +132,14 @@ export default function Calendar() {
                         <div
                           key={block.id}
                           className="text-xs px-1 py-0.5 rounded truncate text-white"
-                          style={{ backgroundColor: block.reason?.color || '#6b7280' }}
-                          title={`Platz ${block.court_number}: ${block.reason?.name || 'Sperrung'} (${block.start_time}-${block.end_time})`}
+                          style={{ backgroundColor: '#6b7280' }}
+                          title={`Platz ${block.court_number}: ${block.reason || 'Sperrung'} (${block.start_time}-${block.end_time})`}
                         >
                           P{block.court_number}
                         </div>
                       ))}
                       {dayBlocks.length > 3 && (
-                        <div className="text-xs text-gray-500">+{dayBlocks.length - 3} mehr</div>
+                        <div className="text-xs text-muted-foreground">+{dayBlocks.length - 3} mehr</div>
                       )}
                     </div>
                   </div>
@@ -150,21 +150,18 @@ export default function Calendar() {
         </div>
 
         {/* Legend */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Legende</h3>
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+          <h3 className="text-sm font-medium text-foreground mb-2">Legende</h3>
           <div className="flex flex-wrap gap-4">
-            {Array.from(new Set(blocks?.map((b) => b.reason?.name))).filter(Boolean).map((name) => {
-              const reason = blocks?.find((b) => b.reason?.name === name)?.reason;
-              return (
-                <div key={name} className="flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: reason?.color || '#6b7280' }}
-                  />
-                  <span className="text-sm text-gray-600">{name}</span>
-                </div>
-              );
-            })}
+            {Array.from(new Set(blocks?.map((b) => b.reason))).filter(Boolean).map((reasonName) => (
+              <div key={reasonName} className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded"
+                  style={{ backgroundColor: '#6b7280' }}
+                />
+                <span className="text-sm text-muted-foreground">{reasonName}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

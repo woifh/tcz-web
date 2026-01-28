@@ -170,10 +170,10 @@ export default function Profile() {
     return (
       <MainLayout>
         <div className="max-w-5xl mx-auto">
-          <div className="bg-white rounded-xl shadow-md p-8">
+          <div className="bg-card rounded-xl shadow-sm p-8">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <span className="text-gray-500">Lade Profildaten...</span>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+              <span className="text-muted-foreground">Lade Profildaten...</span>
             </div>
           </div>
         </div>
@@ -186,16 +186,16 @@ export default function Profile() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Mein Profil</h1>
-          <p className="text-gray-600">Verwalte deine persönlichen Informationen und Einstellungen</p>
+          <h1 className="text-3xl font-bold text-foreground mb-1">Mein Profil</h1>
+          <p className="text-muted-foreground">Verwalte deine persönlichen Informationen und Einstellungen</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Profile Picture Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="bg-card rounded-xl shadow-sm overflow-hidden border border-border hover:shadow-lg transition-shadow">
               {/* Card Header with gradient */}
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 px-6 py-4 pb-16">
+              <div className="bg-gradient-to-br from-primary to-primary/80 px-6 py-4 pb-16">
               </div>
 
               {/* Card Content */}
@@ -203,7 +203,7 @@ export default function Profile() {
                 {/* Avatar */}
                 <div className="relative mb-4">
                   <div
-                    className="rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center overflow-hidden border-4 border-white shadow-xl"
+                    className="rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center overflow-hidden border-4 border-white shadow-xl"
                     style={{ width: 128, height: 128 }}
                   >
                     {profile?.has_profile_picture ? (
@@ -226,18 +226,18 @@ export default function Profile() {
                 </div>
 
                 {/* Name */}
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                <h3 className="text-xl font-semibold text-foreground mb-1">
                   {profile?.firstname} {profile?.lastname}
                 </h3>
 
                 {/* Verification Badge */}
                 {profile?.email_verified ? (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700 mb-4">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-success/20 text-success mb-4">
                     <span className="material-icons text-base">verified</span>
                     Verifiziert
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 mb-4">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-warning/20 text-warning mb-4">
                     <span className="material-icons text-base">pending</span>
                     Nicht verifiziert
                   </span>
@@ -252,7 +252,7 @@ export default function Profile() {
                       className="hidden"
                       onChange={handleProfilePictureChange}
                     />
-                    <span className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-input rounded-lg text-foreground hover:bg-muted transition-colors">
                       <span className="material-icons text-lg">photo_camera</span>
                       Ändern
                     </span>
@@ -261,7 +261,7 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={handleProfilePictureRemove}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                      className="px-3 py-2 border border-input rounded-lg text-destructive hover:bg-destructive/10 hover:border-destructive/30 transition-colors"
                       title="Entfernen"
                     >
                       <span className="material-icons text-lg">delete</span>
@@ -274,14 +274,14 @@ export default function Profile() {
 
           {/* Personal Data Form Card */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-lg transition-shadow">
               {/* Card Header */}
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <span className="material-icons text-gray-500">person</span>
+              <div className="px-6 py-4 border-b border-border">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <span className="material-icons text-muted-foreground">person</span>
                   Persönliche Daten
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">Aktualisiere deine Kontaktinformationen</p>
+                <p className="text-sm text-muted-foreground mt-1">Aktualisiere deine Kontaktinformationen</p>
               </div>
 
               {/* Card Content */}
@@ -289,47 +289,47 @@ export default function Profile() {
                 {/* Name Section */}
                 <div className="grid gap-4 sm:grid-cols-2 mb-6">
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <span className="material-icons text-base text-gray-400">person</span>
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                      <span className="material-icons text-base text-muted-foreground">person</span>
                       Vorname
                     </label>
                     <input
                       type="text"
                       value={formData.firstname}
                       onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       required
                     />
                   </div>
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <span className="material-icons text-base text-gray-400">person</span>
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                      <span className="material-icons text-base text-muted-foreground">person</span>
                       Nachname
                     </label>
                     <input
                       type="text"
                       value={formData.lastname}
                       onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       required
                     />
                   </div>
                 </div>
 
-                <hr className="border-gray-200 my-6" />
+                <hr className="border-border my-6" />
 
                 {/* Contact Section */}
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <span className="material-icons text-base text-gray-400">email</span>
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                      <span className="material-icons text-base text-muted-foreground">email</span>
                       E-Mail
                     </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       autoComplete="off"
                       required
                     />
@@ -340,8 +340,8 @@ export default function Profile() {
                         disabled={resendVerificationMutation.isPending || resendVerificationMutation.isSuccess}
                         className={`mt-2 text-sm underline disabled:opacity-50 ${
                           resendVerificationMutation.isSuccess
-                            ? 'text-green-600'
-                            : 'text-blue-600 hover:text-blue-800'
+                            ? 'text-success'
+                            : 'text-info hover:text-info/80'
                         }`}
                       >
                         {resendVerificationMutation.isPending
@@ -354,26 +354,26 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <span className="material-icons text-base text-gray-400">phone</span>
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                      <span className="material-icons text-base text-muted-foreground">phone</span>
                       Telefon
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       placeholder="Telefonnummer"
                     />
                   </div>
                 </div>
 
-                <hr className="border-gray-200 my-6" />
+                <hr className="border-border my-6" />
 
                 {/* Address Section */}
                 <div className="mb-6">
-                  <label className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-4">
-                    <span className="material-icons text-gray-500">location_on</span>
+                  <label className="flex items-center gap-2 text-base font-semibold text-foreground mb-4">
+                    <span className="material-icons text-muted-foreground">location_on</span>
                     Adresse
                   </label>
 
@@ -382,7 +382,7 @@ export default function Profile() {
                       type="text"
                       value={formData.street}
                       onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       placeholder="Straße und Hausnummer"
                     />
 
@@ -391,26 +391,26 @@ export default function Profile() {
                         type="text"
                         value={formData.zip_code}
                         onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="PLZ"
                       />
                       <input
                         type="text"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all sm:col-span-2"
+                        className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all sm:col-span-2"
                         placeholder="Stadt"
                       />
                     </div>
                   </div>
                 </div>
 
-                <hr className="border-gray-200 my-6" />
+                <hr className="border-border my-6" />
 
                 {/* Password Section */}
                 <div className="mb-6">
-                  <label className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-4">
-                    <span className="material-icons text-gray-500">lock</span>
+                  <label className="flex items-center gap-2 text-base font-semibold text-foreground mb-4">
+                    <span className="material-icons text-muted-foreground">lock</span>
                     Passwort ändern
                   </label>
 
@@ -419,7 +419,7 @@ export default function Profile() {
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       autoComplete="new-password"
                       placeholder="Neues Passwort (optional)"
                     />
@@ -427,7 +427,7 @@ export default function Profile() {
                       type="password"
                       value={formData.password_confirm}
                       onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full border border-input rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
                       autoComplete="new-password"
                       placeholder="Passwort bestätigen"
                     />
@@ -439,7 +439,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => navigate('/dashboard')}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 border border-input rounded-lg text-foreground hover:bg-muted transition-colors"
                   >
                     <span className="material-icons text-lg">close</span>
                     Abbrechen
@@ -447,7 +447,7 @@ export default function Profile() {
                   <button
                     type="submit"
                     disabled={updateMutation.isPending}
-                    className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 transition-all"
+                    className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-all"
                   >
                     {updateMutation.isPending ? (
                       <>
@@ -468,25 +468,25 @@ export default function Profile() {
 
           {/* Notifications Card - Full Width */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-lg transition-shadow">
               {/* Card Header */}
-              <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <span className="material-icons text-gray-500">notifications</span>
+              <div className="px-6 py-4 border-b border-border bg-muted">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <span className="material-icons text-muted-foreground">notifications</span>
                   E-Mail Benachrichtigungen
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">Wähle aus, welche Benachrichtigungen du erhalten möchtest</p>
+                <p className="text-sm text-muted-foreground mt-1">Wähle aus, welche Benachrichtigungen du erhalten möchtest</p>
               </div>
 
               {/* Card Content */}
               <div className="p-6">
                 {/* Master Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border-2 border-gray-200 mb-6">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted border-2 border-border mb-6">
                   <div className="flex-1">
-                    <label htmlFor="notifications-toggle" className="text-base font-semibold text-gray-900 cursor-pointer">
+                    <label htmlFor="notifications-toggle" className="text-base font-semibold text-foreground cursor-pointer">
                       Benachrichtigungen aktiviert
                     </label>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Aktiviere oder deaktiviere alle E-Mail-Benachrichtigungen
                     </p>
                   </div>
@@ -498,25 +498,25 @@ export default function Profile() {
                       onChange={() => setFormData(prev => ({ ...prev, notifications_enabled: !prev.notifications_enabled }))}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-input after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
 
                 {/* Individual Notification Settings */}
                 <div
-                  className={`space-y-2 pl-4 border-l-4 border-blue-400 transition-opacity ${
+                  className={`space-y-2 pl-4 border-l-4 border-primary transition-opacity ${
                     formData.notifications_enabled ? 'opacity-100' : 'opacity-50'
                   }`}
                 >
-                  <p className="text-sm font-medium text-gray-700 mb-4">Benachrichtigen bei:</p>
+                  <p className="text-sm font-medium text-foreground mb-4">Benachrichtigen bei:</p>
 
                   {/* Notification Option: Own Bookings */}
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
                     <div className="flex-1">
-                      <label htmlFor="notify-own" className="font-medium text-gray-900 cursor-pointer">
+                      <label htmlFor="notify-own" className="font-medium text-foreground cursor-pointer">
                         Eigene Buchungen
                       </label>
-                      <p className="text-sm text-gray-600">Wenn du eine Buchung erstellst oder stornierst</p>
+                      <p className="text-sm text-muted-foreground">Wenn du eine Buchung erstellst oder stornierst</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer ml-4">
                       <input
@@ -527,17 +527,17 @@ export default function Profile() {
                         disabled={!formData.notifications_enabled}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                      <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-input after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                     </label>
                   </div>
 
                   {/* Notification Option: Other Bookings */}
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
                     <div className="flex-1">
-                      <label htmlFor="notify-other" className="font-medium text-gray-900 cursor-pointer">
+                      <label htmlFor="notify-other" className="font-medium text-foreground cursor-pointer">
                         Buchungen durch andere Mitglieder
                       </label>
-                      <p className="text-sm text-gray-600">Wenn andere Mitglieder Buchungen vornehmen</p>
+                      <p className="text-sm text-muted-foreground">Wenn andere Mitglieder Buchungen vornehmen</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer ml-4">
                       <input
@@ -548,17 +548,17 @@ export default function Profile() {
                         disabled={!formData.notifications_enabled}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                      <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-input after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                     </label>
                   </div>
 
                   {/* Notification Option: Court Blocked */}
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
                     <div className="flex-1">
-                      <label htmlFor="notify-blocked" className="font-medium text-gray-900 cursor-pointer">
+                      <label htmlFor="notify-blocked" className="font-medium text-foreground cursor-pointer">
                         Platzsperrungen
                       </label>
-                      <p className="text-sm text-gray-600">Bei Turnieren, Wartungsarbeiten, etc.</p>
+                      <p className="text-sm text-muted-foreground">Bei Turnieren, Wartungsarbeiten, etc.</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer ml-4">
                       <input
@@ -569,17 +569,17 @@ export default function Profile() {
                         disabled={!formData.notifications_enabled}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                      <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-input after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                     </label>
                   </div>
 
                   {/* Notification Option: Booking Overridden */}
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
                     <div className="flex-1">
-                      <label htmlFor="notify-overridden" className="font-medium text-gray-900 cursor-pointer">
+                      <label htmlFor="notify-overridden" className="font-medium text-foreground cursor-pointer">
                         Stornierung durch Sperrung
                       </label>
-                      <p className="text-sm text-gray-600">Wenn deine Buchung durch eine Sperrung storniert wird</p>
+                      <p className="text-sm text-muted-foreground">Wenn deine Buchung durch eine Sperrung storniert wird</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer ml-4">
                       <input
@@ -590,7 +590,7 @@ export default function Profile() {
                         disabled={!formData.notifications_enabled}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                      <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-input after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                     </label>
                   </div>
                 </div>

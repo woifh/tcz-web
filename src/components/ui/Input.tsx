@@ -1,45 +1,57 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import * as React from "react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+import { cn } from "../../lib/utils";
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = '', id, ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, label, error, id, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
 
+    const inputElement = (
+      <input
+        type={type}
+        id={inputId}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          error && "border-destructive focus-visible:ring-destructive",
+          className
+        )}
+        ref={ref}
+        aria-invalid={error ? "true" : "false"}
+        {...props}
+      />
+    );
+
+    // If no label or error, just return the input
+    if (!label && !error) {
+      return inputElement;
+    }
+
+    // Wrap with label and error message if provided
     return (
       <div className="w-full">
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-gray-700 font-semibold mb-2"
+            className="block text-sm font-medium text-foreground mb-2"
           >
             {label}
           </label>
         )}
-        <input
-          ref={ref}
-          id={inputId}
-          className={`
-            w-full px-4 py-2 border rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-green-500
-            disabled:bg-gray-100 disabled:cursor-not-allowed
-            ${error ? 'border-red-500' : 'border-gray-300'}
-            ${className}
-          `}
-          {...props}
-        />
+        {inputElement}
         {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <p className="mt-1 text-sm text-destructive">{error}</p>
         )}
       </div>
     );
   }
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export { Input };
 export default Input;

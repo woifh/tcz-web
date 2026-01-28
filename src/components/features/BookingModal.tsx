@@ -33,7 +33,7 @@ type BookingStep =
   | { type: 'searching' }
   | { type: 'submitting' }
   | { type: 'conflict'; sessions: ActiveSession[] }
-  | { type: 'confirmCancel'; session: ActiveSession };
+  | { type: 'confirmCancel'; session: ActiveSession; allSessions: ActiveSession[] };
 
 // Form state managed by reducer for atomic updates
 interface FormState {
@@ -230,7 +230,8 @@ export default function BookingModal({
   };
 
   const handleCancelSession = (session: ActiveSession) => {
-    dispatch({ type: 'SET_STEP', step: { type: 'confirmCancel', session } });
+    if (step.type !== 'conflict') return;
+    dispatch({ type: 'SET_STEP', step: { type: 'confirmCancel', session, allSessions: step.sessions } });
   };
 
   const confirmCancellation = () => {
@@ -286,9 +287,6 @@ export default function BookingModal({
                         (für {session.booked_by_name})
                       </span>
                     )}
-                    {session.is_short_notice && (
-                      <span className="ml-2 text-orange-600">(Kurzfristig)</span>
-                    )}
                   </div>
                 </div>
                 {!session.is_short_notice && (
@@ -316,10 +314,14 @@ export default function BookingModal({
 
   // Render cancellation confirmation modal
   if (step.type === 'confirmCancel') {
+    const goBackToConflict = () => {
+      dispatch({ type: 'SET_STEP', step: { type: 'conflict', sessions: step.allSessions } });
+    };
+
     return (
       <Modal
         isOpen={isOpen}
-        onClose={() => dispatch({ type: 'SET_STEP', step: { type: 'conflict', sessions: [] } })}
+        onClose={goBackToConflict}
         title="Buchung stornieren?"
         data-testid="cancel-confirm-modal"
       >
@@ -338,7 +340,7 @@ export default function BookingModal({
           <div className="flex justify-end gap-2 pt-4">
             <Button
               variant="secondary"
-              onClick={() => dispatch({ type: 'SET_STEP', step: { type: 'conflict', sessions: [] } })}
+              onClick={goBackToConflict}
             >
               Zurück
             </Button>

@@ -23,9 +23,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-background">
       {/* Navigation bar */}
-      <nav className="bg-green-700 text-white p-4" id="main-navigation">
+      <nav className="bg-primary text-primary-foreground p-4" id="main-navigation">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -34,7 +34,7 @@ export default function Login() {
               <span className="sm:hidden">TC Zellerndorf</span>
               <span className="material-icons">sports_tennis</span>
             </h1>
-            <Link to="/login" className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-1">
+            <Link to="/login" className="hover:bg-primary/80 px-3 py-2 rounded transition-colors flex items-center gap-1">
               <span className="material-icons text-sm">login</span>
               <span>Anmelden</span>
             </Link>
@@ -43,14 +43,14 @@ export default function Login() {
       </nav>
 
       <div className="container mx-auto mt-8 px-4">
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 mt-12">
+        <div className="max-w-md mx-auto bg-card rounded-lg shadow-sm border border-border p-8 mt-12">
           <div className="flex justify-center mb-6">
             <img src="/tcz_icon.png" alt="Tennisclub Zellerndorf Logo" style={{ height: 150, width: 150 }} />
           </div>
-          <h2 className="text-2xl font-bold mb-6 text-center">Anmelden</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center text-foreground">Anmelden</h2>
 
           {error && (
-            <div className="mb-4 p-4 rounded flex items-center gap-3 bg-red-100 text-red-700">
+            <div className="mb-4 p-4 rounded flex items-center gap-3 bg-destructive/10 text-destructive">
               <span className="material-icons">error</span>
               <span>{error}</span>
             </div>
@@ -58,7 +58,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">
+              <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
                 E-Mail
               </label>
               <input
@@ -66,13 +66,13 @@ export default function Login() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
                 required
               />
             </div>
 
             <div className="mb-6">
-              <label htmlFor="password" className="block text-gray-700 font-semibold mb-2">
+              <label htmlFor="password" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
                 Passwort
               </label>
               <input
@@ -80,7 +80,7 @@ export default function Login() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
                 required
               />
             </div>
@@ -88,7 +88,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-lg hover:bg-primary/90 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <span className="material-icons">login</span>
               {isSubmitting ? 'Wird angemeldet...' : 'Anmelden'}
@@ -96,7 +96,7 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link to="/" className="text-gray-600 hover:text-green-600 transition duration-200 flex items-center justify-center gap-1">
+            <Link to="/" className="text-muted-foreground hover:text-primary transition duration-200 flex items-center justify-center gap-1">
               <span className="material-icons text-sm">arrow_back</span>
               Zurück zur Übersicht
             </Link>

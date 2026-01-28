@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Layers } from 'lucide-react';
 import { MainLayout } from '../components/layout';
 import { useToast } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
@@ -54,21 +53,35 @@ type SlotStatus = 'available' | 'reserved' | 'blocked' | 'own' | 'own_short_noti
 
 interface SlotInfo {
   status: SlotStatus;
+  isPast?: boolean;
   details?: {
     reservation_id?: number;
     booked_for?: string;
     booked_for_id?: string;
     booked_for_has_profile_picture?: boolean;
     booked_for_profile_picture_version?: number;
+    booked_by?: string;
+    booked_by_id?: string;
+    booked_by_has_profile_picture?: boolean;
+    booked_by_profile_picture_version?: number;
     is_short_notice?: boolean;
     is_temporary?: boolean;
     reason?: string;
+    details?: string;
     block_id?: number;
     can_cancel?: boolean;
     underlying_block?: {
       reason: string;
       details?: string;
       block_id: number;
+    };
+    suspended_reservation?: {
+      booked_for: string;
+      booked_for_id: string;
+      booked_for_has_profile_picture?: boolean;
+      booked_for_profile_picture_version?: number;
+      reservation_id: number;
+      is_short_notice?: boolean;
     };
   };
 }
@@ -114,6 +127,9 @@ export default function Dashboard() {
     time: string;
     date: string;
   } | null>(null);
+  const [emailBannerDismissed, setEmailBannerDismissed] = useState(() => {
+    return localStorage.getItem('emailBannerDismissed') === 'true';
+  });
 
   const dateStr = formatDateISO(selectedDate);
   const isSelectedToday = isSameDay(selectedDate, new Date());
@@ -269,16 +285,20 @@ export default function Dashboard() {
 
     const result: Record<number, Record<string, SlotInfo>> = {};
     const currentHour = availability.current_hour;
-    const isToday = dateStr === formatDateISO(new Date());
+    const todayStr = formatDateISO(new Date());
+    const isToday = dateStr === todayStr;
+    const isPastDate = dateStr < todayStr;
 
     for (const court of COURTS) {
       result[court] = {};
       for (const hour of HOURS) {
         const time = `${hour.toString().padStart(2, '0')}:00`;
-        const isPast = isToday && hour < currentHour;
+        // Past if: entire date is in the past, OR it's today and hour is before current hour
+        const isPast = isPastDate || (isToday && hour < currentHour);
 
         result[court][time] = {
           status: isPast ? 'past' : 'available',
+          isPast,
         };
       }
     }
@@ -286,6 +306,10 @@ export default function Dashboard() {
     // Fill in occupied slots
     for (const court of availability.courts) {
       for (const occupied of court.occupied) {
+        // Check if this slot is in the past
+        const hour = parseInt(occupied.time.split(':')[0], 10);
+        const slotIsPast = isPastDate || (isToday && hour < currentHour);
+
         let status: SlotStatus;
         const isOwn = occupied.details?.booked_for_id === user?.id;
 
@@ -309,6 +333,7 @@ export default function Dashboard() {
 
         result[court.court_number][occupied.time] = {
           status,
+          isPast: slotIsPast,
           details: occupied.details || undefined,
         };
       }
@@ -361,29 +386,36 @@ export default function Dashboard() {
 
   const getSlotClasses = (slot: SlotInfo) => {
     const base =
-      'h-14 w-full rounded-lg text-xs font-medium flex items-center justify-center transition-colors cursor-default';
-    const canCancel = slot.details?.can_cancel;
+      'h-14 w-full rounded-lg text-xs font-medium flex items-center justify-center transition-colors cursor-default overflow-hidden';
+    const pastModifier = slot.isPast ? ' opacity-50' : '';
+
+    // Past empty slots
+    if (slot.status === 'past') {
+      return `${base} bg-muted text-muted-foreground`;
+    }
+
+    const canCancel = !slot.isPast && slot.details?.can_cancel;
     switch (slot.status) {
       case 'available':
-        return `${base} bg-white border border-gray-300 text-gray-700 cursor-pointer hover:bg-green-50 hover:border-green-400`;
+        return slot.isPast
+          ? `${base} bg-muted text-muted-foreground`
+          : `${base} bg-card border border-border text-foreground cursor-pointer hover:bg-primary/10 hover:border-primary`;
       case 'reserved':
-        return `${base} bg-green-500 text-white`;
+        return `${base} bg-primary text-primary-foreground${pastModifier}`;
       case 'short_notice':
-        return `${base} bg-orange-500 text-white`;
+        return `${base} bg-warning text-white${pastModifier}`;
       case 'own':
         return canCancel
-          ? `${base} bg-green-600 text-white ring-2 ring-green-300 cursor-pointer hover:bg-green-700`
-          : `${base} bg-green-600 text-white ring-2 ring-green-300`;
+          ? `${base} bg-primary text-primary-foreground ring-2 ring-primary/50 cursor-pointer hover:bg-primary/90`
+          : `${base} bg-primary text-primary-foreground ring-2 ring-primary/50${pastModifier}`;
       case 'own_short_notice':
         return canCancel
-          ? `${base} bg-orange-500 text-white ring-2 ring-orange-300 cursor-pointer hover:bg-orange-600`
-          : `${base} bg-orange-500 text-white ring-2 ring-orange-300`;
+          ? `${base} bg-warning text-white ring-2 ring-warning/50 cursor-pointer hover:bg-warning/90`
+          : `${base} bg-warning text-white ring-2 ring-warning/50${pastModifier}`;
       case 'blocked':
-        return `${base} bg-gray-400 text-white`;
+        return `${base} bg-muted text-muted-foreground${pastModifier}`;
       case 'suspended':
-        return `${base} bg-yellow-400 text-yellow-900`;
-      case 'past':
-        return `${base} bg-gray-200 text-gray-400`;
+        return `${base} bg-destructive text-destructive-foreground${pastModifier}`;
     }
   };
 
@@ -395,10 +427,12 @@ export default function Dashboard() {
       case 'short_notice':
       case 'own':
       case 'own_short_notice': {
-        const name = (slot.status === 'own' || slot.status === 'own_short_notice') ? 'Meine' : (slot.details?.booked_for?.split(' ')[0] || 'Belegt');
+        const name = slot.details?.booked_for || 'Belegt';
         const hasProfilePic = slot.details?.booked_for_has_profile_picture;
         const profilePicVersion = slot.details?.booked_for_profile_picture_version;
         const memberId = slot.details?.booked_for_id;
+        const bookedByDifferent = slot.details?.booked_by_id && slot.details?.booked_by_id !== slot.details?.booked_for_id;
+        const bookedByName = slot.details?.booked_by;
 
         if (hasProfilePic && memberId) {
           return (
@@ -406,32 +440,62 @@ export default function Dashboard() {
               <img
                 src={`/api/members/${memberId}/profile-picture?v=${profilePicVersion}`}
                 alt=""
-                className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                 loading="lazy"
               />
-              <span className="truncate">{name}</span>
+              <span className="flex flex-col items-start min-w-0">
+                <span className="truncate w-full">{name}</span>
+                {bookedByDifferent && (
+                  <span className="text-[9px] opacity-70 truncate w-full">{bookedByName}</span>
+                )}
+              </span>
             </span>
           );
         }
-        return name;
+        return (
+          <span className="flex flex-col items-center">
+            <span className="truncate">{name}</span>
+            {bookedByDifferent && (
+              <span className="text-[9px] opacity-70 truncate">{bookedByName}</span>
+            )}
+          </span>
+        );
       }
-      case 'blocked':
-        return slot.details?.reason || 'Gesperrt';
+      case 'blocked': {
+        const reason = slot.details?.reason || 'Gesperrt';
+        const blockDetails = slot.details?.details;
+        if (blockDetails) {
+          return (
+            <span className="flex flex-col items-center">
+              <span className="truncate">{reason}</span>
+              <span className="text-[9px] opacity-70 truncate">{blockDetails}</span>
+            </span>
+          );
+        }
+        return <span className="truncate">{reason}</span>;
+      }
       case 'suspended': {
         const reason = slot.details?.reason || 'Gesperrt';
-        const hasUnderlying = !!slot.details?.underlying_block;
-        if (hasUnderlying) {
+        const suspendedRes = slot.details?.suspended_reservation;
+        const hasUnderlyingBlock = !!slot.details?.underlying_block;
+
+        if (suspendedRes || hasUnderlyingBlock) {
+          const title = suspendedRes
+            ? `Reservierung von ${suspendedRes.booked_for} vorübergehend gesperrt`
+            : `Darunter: ${slot.details?.underlying_block?.reason}`;
           return (
-            <span className="flex items-center gap-1" title={`Darunter: ${slot.details?.underlying_block?.reason}`}>
-              {reason}
-              <Layers className="w-3 h-3 opacity-70 flex-shrink-0" />
+            <span className="flex items-center gap-1.5 max-w-full" title={title}>
+              <span className="truncate">{reason}</span>
+              <span className="material-icons text-base opacity-80 flex-shrink-0">
+                {suspendedRes ? 'person_off' : 'layers'}
+              </span>
             </span>
           );
         }
-        return reason;
+        return <span className="truncate">{reason}</span>;
       }
       case 'past':
-        return '';
+        return '–';
     }
   };
 
@@ -439,12 +503,12 @@ export default function Dashboard() {
     const isSelected = day.isoDate === dateStr;
 
     if (isSelected) {
-      return 'bg-green-600 text-white';
+      return 'bg-primary text-primary-foreground';
     }
     if (day.isToday) {
-      return 'bg-green-100 text-green-700';
+      return 'bg-accent text-primary';
     }
-    return 'bg-gray-50 text-gray-700 hover:bg-gray-100';
+    return 'bg-muted text-foreground hover:bg-muted-foreground/10';
   };
 
   // Payment status calculations
@@ -460,13 +524,13 @@ export default function Dashboard() {
       {hasUnpaidFee && (
         <>
           {paymentConfirmationRequested ? (
-            <div className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <div className="mb-4 bg-info/10 border-l-4 border-info p-4 rounded-r-lg">
               <div className="flex items-center">
-                <span className="material-icons text-blue-600 mr-3">hourglass_empty</span>
+                <span className="material-icons text-info mr-3">hourglass_empty</span>
                 <div>
-                  <p className="text-blue-800 font-semibold">Zahlungsbestätigung wird geprüft</p>
+                  <p className="text-info font-semibold">Zahlungsbestätigung wird geprüft</p>
                   {isPastDeadline && (
-                    <p className="text-blue-600 text-xs mt-1">
+                    <p className="text-info/80 text-xs mt-1">
                       Buchungen sind bis zur Bestätigung weiterhin gesperrt.
                     </p>
                   )}
@@ -474,13 +538,13 @@ export default function Dashboard() {
               </div>
             </div>
           ) : isPastDeadline ? (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+            <div className="mb-4 bg-destructive/10 border-l-4 border-destructive p-4 rounded-r-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="material-icons text-red-600 mr-3">block</span>
+                  <span className="material-icons text-destructive mr-3">block</span>
                   <div>
-                    <p className="text-red-800 font-semibold">Buchungen gesperrt</p>
-                    <p className="text-red-700 text-sm">
+                    <p className="text-destructive font-semibold">Buchungen gesperrt</p>
+                    <p className="text-destructive/80 text-sm">
                       Die Zahlungsfrist ist abgelaufen. Bitte zahl deinen Beitrag, um wieder buchen zu können.
                     </p>
                   </div>
@@ -488,7 +552,7 @@ export default function Dashboard() {
                 <button
                   onClick={handleConfirmPayment}
                   disabled={confirmPaymentMutation.isPending}
-                  className="ml-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+                  className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
                   <span className="material-icons text-sm">check_circle</span>
                   Zahlung bestätigen
@@ -496,13 +560,13 @@ export default function Dashboard() {
               </div>
             </div>
           ) : paymentDeadline ? (
-            <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+            <div className="mb-4 bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="material-icons text-yellow-600 mr-3">schedule</span>
+                  <span className="material-icons text-warning mr-3">schedule</span>
                   <div>
-                    <p className="text-yellow-800 font-semibold">Mitgliedsbeitrag offen</p>
-                    <p className="text-yellow-700 text-sm">
+                    <p className="text-warning font-semibold">Mitgliedsbeitrag offen</p>
+                    <p className="text-warning/80 text-sm">
                       {daysUntilDeadline === 0 ? (
                         <>
                           Zahlungsfrist: <strong>Heute</strong>
@@ -522,7 +586,7 @@ export default function Dashboard() {
                 <button
                   onClick={handleConfirmPayment}
                   disabled={confirmPaymentMutation.isPending}
-                  className="ml-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+                  className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
                   <span className="material-icons text-sm">check_circle</span>
                   Zahlung bestätigen
@@ -530,19 +594,19 @@ export default function Dashboard() {
               </div>
             </div>
           ) : (
-            <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+            <div className="mb-4 bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="material-icons text-yellow-600 mr-3">warning</span>
+                  <span className="material-icons text-warning mr-3">warning</span>
                   <div>
-                    <p className="text-yellow-800 font-semibold">Mitgliedsbeitrag offen</p>
-                    <p className="text-yellow-700 text-sm">Dein Mitgliedsbeitrag ist noch nicht bezahlt.</p>
+                    <p className="text-warning font-semibold">Mitgliedsbeitrag offen</p>
+                    <p className="text-warning/80 text-sm">Dein Mitgliedsbeitrag ist noch nicht bezahlt.</p>
                   </div>
                 </div>
                 <button
                   onClick={handleConfirmPayment}
                   disabled={confirmPaymentMutation.isPending}
-                  className="ml-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+                  className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
                   <span className="material-icons text-sm">check_circle</span>
                   Zahlung bestätigen
@@ -554,58 +618,69 @@ export default function Dashboard() {
       )}
 
       {/* Email verification reminder */}
-      {user && !user.email_verified && (
-        <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="material-icons text-orange-600 mr-3">email</span>
-              <div>
-                <p className="text-orange-800 font-semibold">E-Mail-Adresse nicht bestätigt</p>
-                <p className="text-orange-700 text-sm">
-                  Du erhältst keine E-Mail-Benachrichtigungen zu deinen Buchungen, bis du deine E-Mail-Adresse
-                  bestätigst.
-                </p>
+      {user && !user.email_verified && !emailBannerDismissed && (
+        <div className="mb-4 bg-card border border-warning/30 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-warning/10 px-4 py-3 border-b border-warning/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-icons text-warning text-xl">mark_email_unread</span>
+                <h3 className="font-semibold text-warning">E-Mail-Adresse nicht bestätigt</h3>
               </div>
+              <button
+                onClick={() => {
+                  localStorage.setItem('emailBannerDismissed', 'true');
+                  setEmailBannerDismissed(true);
+                }}
+                className="text-warning/60 hover:text-warning transition-colors p-1 -mr-1"
+                aria-label="Schließen"
+              >
+                <span className="material-icons text-xl">close</span>
+              </button>
             </div>
+          </div>
+          <div className="p-4">
+            <p className="text-muted-foreground text-sm mb-4">
+              Du erhältst keine E-Mail-Benachrichtigungen zu deinen Buchungen, bis du deine E-Mail-Adresse bestätigst.
+            </p>
             <button
               onClick={() => resendVerificationMutation.mutate()}
               disabled={resendVerificationMutation.isPending || resendVerificationMutation.isSuccess}
-              className={`ml-4 ${
+              className={`w-full sm:w-auto ${
                 resendVerificationMutation.isSuccess
-                  ? 'bg-green-600'
-                  : 'bg-orange-600 hover:bg-orange-700'
-              } text-white font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50`}
+                  ? 'bg-success'
+                  : 'bg-warning hover:bg-warning/90'
+              } text-white font-semibold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50`}
             >
-              <span className="material-icons text-sm">
+              <span className="material-icons text-lg">
                 {resendVerificationMutation.isSuccess ? 'check' : 'send'}
               </span>
               {resendVerificationMutation.isPending
                 ? 'Wird gesendet...'
                 : resendVerificationMutation.isSuccess
                   ? 'E-Mail gesendet'
-                  : 'E-Mail erneut senden'}
+                  : 'Bestätigungs-E-Mail senden'}
             </button>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-6">
         {/* Date Navigation */}
         <div className="mb-6">
           {/* Row 1: Date Header + Heute Button */}
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => dateInputRef.current?.showPicker()}
-              className="flex items-center gap-1 text-lg font-semibold text-gray-900"
+              className="flex items-center gap-1 text-lg font-semibold text-foreground"
             >
               <span>{formatDisplayDate(selectedDate)}</span>
-              <span className="material-icons text-gray-500 text-base">expand_more</span>
+              <span className="material-icons text-muted-foreground text-base">expand_more</span>
             </button>
             <button
               onClick={goToToday}
               disabled={isSelectedToday}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                isSelectedToday ? 'bg-gray-200 text-gray-400' : 'bg-green-100 text-green-700'
+                isSelectedToday ? 'bg-muted text-muted-foreground' : 'bg-accent text-primary hover:bg-primary/20'
               }`}
             >
               Heute
@@ -617,7 +692,7 @@ export default function Dashboard() {
             {/* Left Arrow */}
             <button
               onClick={() => shiftDate(-1)}
-              className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100 text-gray-500 flex-shrink-0"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-muted text-muted-foreground flex-shrink-0"
             >
               <span className="material-icons">chevron_left</span>
             </button>
@@ -642,7 +717,7 @@ export default function Dashboard() {
             {/* Right Arrow */}
             <button
               onClick={() => shiftDate(1)}
-              className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100 text-gray-500 flex-shrink-0"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-muted text-muted-foreground flex-shrink-0"
             >
               <span className="material-icons">chevron_right</span>
             </button>
@@ -659,49 +734,51 @@ export default function Dashboard() {
         </div>
 
         {/* Legend */}
-        <div className="hidden lg:flex gap-6 mb-4 text-sm">
+        <div className="hidden lg:flex gap-6 mb-4 text-sm text-foreground">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-white border border-gray-300 rounded"></div>
+            <div className="w-4 h-4 bg-card border border-border rounded"></div>
             <span>Verfügbar</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <div className="w-4 h-4 bg-primary rounded"></div>
             <span>Gebucht</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-orange-500 rounded"></div>
+            <div className="w-4 h-4 bg-warning rounded"></div>
             <span>Kurzfristig gebucht</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gray-400 rounded"></div>
+            <div className="w-4 h-4 bg-muted rounded"></div>
             <span>Blockiert</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+            <div className="w-4 h-4 bg-destructive rounded"></div>
             <span>Vorübergehend gesperrt</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gray-200 rounded"></div>
-            <span>Vergangen</span>
           </div>
         </div>
 
         {/* Court Availability Grid */}
         <div className="overflow-x-auto">
           {isLoadingAvailability ? (
-            <div className="p-8 text-center text-gray-500">Lade Verfügbarkeit...</div>
+            <div className="p-8 text-center text-muted-foreground">Lade Verfügbarkeit...</div>
           ) : grid ? (
             <table
               className="min-w-full table-fixed"
               style={{ borderCollapse: 'separate', borderSpacing: '4px' }}
             >
+              <colgroup>
+                <col className="w-16" />
+                {COURTS.map((court) => (
+                  <col key={court} style={{ width: `${(100 - 5) / 6}%` }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr>
-                  <th className="px-2 py-2 text-center font-semibold text-sm w-16 bg-gray-100 rounded-lg">
+                  <th className="px-2 py-2 text-center font-semibold text-sm bg-muted rounded-lg text-foreground">
                     Zeit
                   </th>
                   {COURTS.map((court) => (
-                    <th key={court} className="px-2 py-2 text-center font-semibold text-sm bg-gray-100 rounded-lg">
+                    <th key={court} className="px-2 py-2 text-center font-semibold text-sm bg-muted rounded-lg text-foreground">
                       Platz {court}
                     </th>
                   ))}
@@ -712,7 +789,7 @@ export default function Dashboard() {
                   const time = `${hour.toString().padStart(2, '0')}:00`;
                   return (
                     <tr key={hour}>
-                      <td className="px-2 py-3 font-semibold text-center text-sm w-16 bg-gray-50 rounded-lg text-gray-600">
+                      <td className="px-2 py-3 font-semibold text-center text-sm w-16 bg-muted/50 rounded-lg text-muted-foreground">
                         {time}
                       </td>
                       {COURTS.map((court) => {
@@ -736,13 +813,13 @@ export default function Dashboard() {
               </tbody>
             </table>
           ) : (
-            <div className="p-8 text-center text-gray-500">Keine Daten verfügbar</div>
+            <div className="p-8 text-center text-muted-foreground">Keine Daten verfügbar</div>
           )}
         </div>
       </div>
 
       {/* User's Active Booking Sessions */}
-      <div className="mt-8 border border-gray-200 rounded-lg p-6 bg-blue-50">
+      <div className="mt-8 border border-border rounded-lg p-6 bg-info/10">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <span className="material-icons">event_note</span>
@@ -750,7 +827,7 @@ export default function Dashboard() {
           </h3>
           <Link
             to="/reservations"
-            className="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1"
+            className="text-info hover:text-info/80 text-sm font-semibold flex items-center gap-1"
           >
             Alle anzeigen
             <span className="material-icons text-sm">arrow_forward</span>
@@ -759,24 +836,24 @@ export default function Dashboard() {
 
         <div className="space-y-3">
           {userReservations.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Keine aktiven Buchungen</p>
+            <p className="text-muted-foreground text-center py-4">Keine aktiven Buchungen</p>
           ) : (
             userReservations.map((reservation) => (
               <div
                 key={reservation.id}
                 className={`${
                   reservation.is_suspended
-                    ? 'bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-400'
-                    : 'bg-white rounded-lg p-4 border border-gray-200'
+                    ? 'bg-warning/10 rounded-lg p-4 border-l-4 border-warning'
+                    : 'bg-card rounded-lg p-4 border border-border'
                 }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-semibold">Platz {reservation.court_number}</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {formatReservationDate(reservation.date)} • {reservation.start_time} - {reservation.end_time}
                     </p>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>Gebucht für:</span>
                       {reservation.booked_for_has_profile_picture && (
                         <img
@@ -790,15 +867,15 @@ export default function Dashboard() {
                     </div>
                     {reservation.is_suspended && (
                       <div className="mt-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-warning/20 text-warning rounded-full">
                           <span className="material-icons text-xs">warning</span>
                           Vorübergehend gesperrt
                         </span>
-                        {reservation.reason && <p className="text-xs text-yellow-700 mt-1">{reservation.reason}</p>}
+                        {reservation.reason && <p className="text-xs text-warning/80 mt-1">{reservation.reason}</p>}
                       </div>
                     )}
                     {reservation.is_short_notice && (
-                      <span className="inline-block mt-1 px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                      <span className="inline-block mt-1 px-2 py-1 text-xs bg-warning/20 text-warning rounded-full">
                         Kurzfristige Buchung
                       </span>
                     )}
@@ -806,13 +883,13 @@ export default function Dashboard() {
                   {!reservation.is_short_notice ? (
                     <button
                       onClick={() => handleCancelReservation(reservation.id)}
-                      className="text-red-600 hover:text-red-900 p-1"
+                      className="text-destructive hover:text-destructive/80 p-1"
                       title="Stornieren"
                     >
                       <span className="material-icons">delete</span>
                     </button>
                   ) : (
-                    <span className="text-gray-500 text-sm">Nicht stornierbar</span>
+                    <span className="text-muted-foreground text-sm">Nicht stornierbar</span>
                   )}
                 </div>
               </div>
@@ -822,17 +899,17 @@ export default function Dashboard() {
 
         {/* Availability Summary */}
         {status && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-border">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-white rounded p-3">
-                <div className="text-gray-600">Verfügbare Buchungsplätze</div>
-                <div className="text-lg font-semibold text-green-600">
+              <div className="bg-card rounded p-3">
+                <div className="text-muted-foreground">Verfügbare Buchungsplätze</div>
+                <div className="text-lg font-semibold text-success">
                   {status.limits.regular_reservations.available} von {status.limits.regular_reservations.limit}
                 </div>
               </div>
-              <div className="bg-white rounded p-3">
-                <div className="text-gray-600">Kurzfristige Buchungen</div>
-                <div className="text-lg font-semibold text-orange-600">
+              <div className="bg-card rounded p-3">
+                <div className="text-muted-foreground">Kurzfristige Buchungen</div>
+                <div className="text-lg font-semibold text-warning">
                   {status.limits.short_notice_bookings.available} von {status.limits.short_notice_bookings.limit}
                 </div>
               </div>
@@ -843,7 +920,7 @@ export default function Dashboard() {
 
       {/* Bookings Made for Others */}
       {bookingsForOthers.length > 0 && (
-        <div className="mt-8 border border-gray-200 rounded-lg p-6 bg-purple-50">
+        <div className="mt-8 border border-border rounded-lg p-6 bg-primary/10">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold flex items-center gap-2">
               <span className="material-icons">people</span>
@@ -855,16 +932,16 @@ export default function Dashboard() {
               <div
                 key={reservation.id}
                 className={`${
-                  reservation.is_suspended ? 'bg-yellow-50 border-l-4 border-yellow-400' : 'bg-white'
-                } rounded-lg p-4 border border-gray-200`}
+                  reservation.is_suspended ? 'bg-warning/10 border-l-4 border-warning' : 'bg-card'
+                } rounded-lg p-4 border border-border`}
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-semibold">Platz {reservation.court_number}</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {formatReservationDate(reservation.date)} • {reservation.start_time} - {reservation.end_time}
                     </p>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>Gebucht für:</span>
                       {reservation.booked_for_has_profile_picture && (
                         <img
@@ -878,15 +955,15 @@ export default function Dashboard() {
                     </div>
                     {reservation.is_suspended && (
                       <div className="mt-1">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning/20 text-warning">
                           <span className="material-icons text-xs mr-1">warning</span>
                           Vorübergehend gesperrt
                         </span>
-                        {reservation.reason && <p className="text-xs text-yellow-700 mt-1">{reservation.reason}</p>}
+                        {reservation.reason && <p className="text-xs text-warning/80 mt-1">{reservation.reason}</p>}
                       </div>
                     )}
                     {reservation.is_short_notice && (
-                      <span className="inline-block mt-1 px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                      <span className="inline-block mt-1 px-2 py-1 text-xs bg-warning/20 text-warning rounded-full">
                         Kurzfristige Buchung
                       </span>
                     )}
@@ -894,13 +971,13 @@ export default function Dashboard() {
                   {!reservation.is_short_notice ? (
                     <button
                       onClick={() => handleCancelReservation(reservation.id)}
-                      className="text-red-600 hover:text-red-900 p-1"
+                      className="text-destructive hover:text-destructive/80 p-1"
                       title="Stornieren"
                     >
                       <span className="material-icons">delete</span>
                     </button>
                   ) : (
-                    <span className="text-gray-500 text-sm">Nicht stornierbar</span>
+                    <span className="text-muted-foreground text-sm">Nicht stornierbar</span>
                   )}
                 </div>
               </div>

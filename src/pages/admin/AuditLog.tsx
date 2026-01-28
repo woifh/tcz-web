@@ -143,22 +143,22 @@ export default function AuditLog() {
   };
 
   const getActionColor = (action: string) => {
-    if (action === 'create' || action.includes('create')) return 'bg-green-100 text-green-700';
-    if (action === 'delete' || action === 'cancel' || action.includes('delete')) return 'bg-red-100 text-red-700';
-    if (action === 'update' || action.includes('update')) return 'bg-yellow-100 text-yellow-700';
-    if (action === 'suspend' || action === 'deactivate') return 'bg-orange-100 text-orange-700';
-    if (action === 'unsuspend' || action === 'reactivate') return 'bg-teal-100 text-teal-700';
-    if (action === 'login' || action === 'logout') return 'bg-blue-100 text-blue-700';
-    return 'bg-gray-100 text-gray-700';
+    if (action === 'create' || action.includes('create')) return 'bg-success/20 text-success';
+    if (action === 'delete' || action === 'cancel' || action.includes('delete')) return 'bg-destructive/20 text-destructive';
+    if (action === 'update' || action.includes('update')) return 'bg-warning/20 text-warning';
+    if (action === 'suspend' || action === 'deactivate') return 'bg-warning/20 text-warning';
+    if (action === 'unsuspend' || action === 'reactivate') return 'bg-success/20 text-success';
+    if (action === 'login' || action === 'logout') return 'bg-info/20 text-info';
+    return 'bg-muted text-muted-foreground';
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'block': return 'bg-purple-100 text-purple-700';
-      case 'reservation': return 'bg-blue-100 text-blue-700';
-      case 'member': return 'bg-green-100 text-green-700';
-      case 'reason': return 'bg-yellow-100 text-yellow-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'block': return 'bg-primary/20 text-primary';
+      case 'reservation': return 'bg-info/20 text-info';
+      case 'member': return 'bg-success/20 text-success';
+      case 'reason': return 'bg-warning/20 text-warning';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -190,7 +190,7 @@ export default function AuditLog() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Aktivitätsprotokoll</h1>
+        <h1 className="text-2xl font-bold text-foreground">Aktivitätsprotokoll</h1>
 
         {/* Actor Filter */}
         <div className="flex gap-2">
@@ -200,8 +200,8 @@ export default function AuditLog() {
               onClick={() => setActorFilter(filter.value)}
               className={`px-4 py-2 text-sm rounded-lg transition-colors ${
                 actorFilter === filter.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-foreground hover:bg-muted/80 border'
               }`}
             >
               {filter.label}
@@ -210,7 +210,7 @@ export default function AuditLog() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Input
               type="text"
@@ -257,30 +257,30 @@ export default function AuditLog() {
 
         {/* Audit Log List */}
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">Laden...</div>
+          <div className="text-center py-8 text-muted-foreground">Laden...</div>
         ) : filteredEntries.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center text-gray-500">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-8 text-center text-muted-foreground">
             Keine Einträge gefunden
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Zeitpunkt</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 hidden sm:table-cell">Typ</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Akteur</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Aktion</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 hidden lg:table-cell">Details</th>
+                  <tr className="bg-muted border-b">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Zeitpunkt</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">Typ</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Akteur</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Aktion</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">Details</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredEntries.map((entry, index) => {
                     const actorType = getActorType(entry);
                     return (
-                      <tr key={`${entry.timestamp}-${index}`} className="border-b last:border-b-0 hover:bg-gray-50" data-testid={`audit-entry-${index}`}>
-                        <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                      <tr key={`${entry.timestamp}-${index}`} className="border-b last:border-b-0 hover:bg-muted/80" data-testid={`audit-entry-${index}`}>
+                        <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                           {formatTimestamp(entry.timestamp)}
                         </td>
                         <td className="px-4 py-3 hidden sm:table-cell">
@@ -294,10 +294,10 @@ export default function AuditLog() {
                             <span
                               className={`px-1.5 py-0.5 text-xs rounded ${
                                 actorType === 'admin'
-                                  ? 'bg-purple-100 text-purple-700'
+                                  ? 'bg-primary/20 text-primary'
                                   : actorType === 'system'
-                                    ? 'bg-gray-100 text-gray-700'
-                                    : 'bg-blue-100 text-blue-700'
+                                    ? 'bg-muted text-muted-foreground'
+                                    : 'bg-info/20 text-info'
                               }`}
                             >
                               {actorType === 'admin' ? 'Admin' : actorType === 'system' ? 'System' : 'Mitglied'}
@@ -309,7 +309,7 @@ export default function AuditLog() {
                             {ACTION_LABELS[entry.action] || entry.action}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">
+                        <td className="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">
                           {formatDetails(entry) || '-'}
                         </td>
                       </tr>
@@ -322,7 +322,7 @@ export default function AuditLog() {
         )}
 
         {/* Results count */}
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-muted-foreground text-center">
           {filteredEntries.length} von {auditLog?.length || 0} Einträgen
         </div>
       </div>
