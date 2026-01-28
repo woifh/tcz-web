@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout';
 import { useToast } from '../components/ui';
 import { getProfile, updateProfile, uploadProfilePicture, deleteProfilePicture, resendVerificationEmail } from '../api/members';
+import { getApiUrl } from '../lib/utils';
 import type { Member } from '../types';
 
 export default function Profile() {
@@ -208,7 +209,7 @@ export default function Profile() {
                   >
                     {profile?.has_profile_picture ? (
                       <img
-                        src={`/api/members/${profile.id}/profile-picture?v=${profile.profile_picture_version}`}
+                        src={getApiUrl(`/api/members/${profile.id}/profile-picture?v=${profile.profile_picture_version}`)}
                         alt="Profilbild"
                         className="w-full h-full object-cover"
                       />

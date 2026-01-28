@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Profile pictures not loading on Cloudflare Pages deployment (cross-origin URL fix)
+- Dashboard slot colors now consistent across themes (use explicit hex values)
+
 ## [1.0] - 2026-01-28
 
 ### Added

@@ -1,6 +1,7 @@
 import { type ReactNode, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { getApiUrl } from '../../lib/utils';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -166,7 +167,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   >
                     {user?.has_profile_picture ? (
                       <img
-                        src={`/api/members/${user.id}/profile-picture?v=${user.profile_picture_version}`}
+                        src={getApiUrl(`/api/members/${user.id}/profile-picture?v=${user.profile_picture_version}`)}
                         alt=""
                         className="rounded-full object-cover"
                         style={{ width: 32, height: 32 }}
@@ -316,7 +317,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <div className="flex items-center gap-2">
                   {user?.has_profile_picture ? (
                     <img
-                      src={`/api/members/${user.id}/profile-picture?v=${user.profile_picture_version}`}
+                      src={getApiUrl(`/api/members/${user.id}/profile-picture?v=${user.profile_picture_version}`)}
                       alt=""
                       className="w-7 h-7 rounded-full object-cover"
                     />

@@ -9,6 +9,7 @@ import { availabilityService } from '../api/availabilityService';
 import { getReservations, getReservationStatus, cancelReservation } from '../api/reservations';
 import { BookingModal } from '../components/features';
 import api from '../api/client';
+import { getApiUrl } from '../lib/utils';
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 8); // 8:00 to 21:00
 const COURTS = [1, 2, 3, 4, 5, 6];
@@ -403,17 +404,17 @@ export default function Dashboard() {
       case 'reserved':
         return `${base} bg-primary text-primary-foreground${pastModifier}`;
       case 'short_notice':
-        return `${base} bg-warning text-white${pastModifier}`;
+        return `${base} bg-[#fb923c] text-white${pastModifier}`;
       case 'own':
         return canCancel
           ? `${base} bg-primary text-primary-foreground ring-2 ring-primary/50 cursor-pointer hover:bg-primary/90`
           : `${base} bg-primary text-primary-foreground ring-2 ring-primary/50${pastModifier}`;
       case 'own_short_notice':
         return canCancel
-          ? `${base} bg-warning text-white ring-2 ring-warning/50 cursor-pointer hover:bg-warning/90`
-          : `${base} bg-warning text-white ring-2 ring-warning/50${pastModifier}`;
+          ? `${base} bg-[#fb923c] text-white ring-2 ring-[#fb923c]/50 cursor-pointer hover:bg-[#f97316]`
+          : `${base} bg-[#fb923c] text-white ring-2 ring-[#fb923c]/50${pastModifier}`;
       case 'blocked':
-        return `${base} bg-muted text-muted-foreground${pastModifier}`;
+        return `${base} bg-[#9ca3af] text-white${pastModifier}`;
       case 'suspended':
         return `${base} bg-destructive text-destructive-foreground${pastModifier}`;
     }
@@ -438,7 +439,7 @@ export default function Dashboard() {
           return (
             <span className="flex items-center gap-1">
               <img
-                src={`/api/members/${memberId}/profile-picture?v=${profilePicVersion}`}
+                src={getApiUrl(`/api/members/${memberId}/profile-picture?v=${profilePicVersion}`)}
                 alt=""
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                 loading="lazy"
@@ -744,11 +745,11 @@ export default function Dashboard() {
             <span>Gebucht</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-warning rounded"></div>
+            <div className="w-4 h-4 bg-[#fb923c] rounded"></div>
             <span>Kurzfristig gebucht</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-muted rounded"></div>
+            <div className="w-4 h-4 bg-[#9ca3af] rounded"></div>
             <span>Blockiert</span>
           </div>
           <div className="flex items-center gap-2">
@@ -857,7 +858,7 @@ export default function Dashboard() {
                       <span>Gebucht für:</span>
                       {reservation.booked_for_has_profile_picture && (
                         <img
-                          src={`/api/members/${reservation.booked_for_id}/profile-picture?v=${reservation.booked_for_profile_picture_version}`}
+                          src={getApiUrl(`/api/members/${reservation.booked_for_id}/profile-picture?v=${reservation.booked_for_profile_picture_version}`)}
                           alt=""
                           className="w-5 h-5 rounded-full object-cover"
                           loading="lazy"
@@ -945,7 +946,7 @@ export default function Dashboard() {
                       <span>Gebucht für:</span>
                       {reservation.booked_for_has_profile_picture && (
                         <img
-                          src={`/api/members/${reservation.booked_for_id}/profile-picture?v=${reservation.booked_for_profile_picture_version}`}
+                          src={getApiUrl(`/api/members/${reservation.booked_for_id}/profile-picture?v=${reservation.booked_for_profile_picture_version}`)}
                           alt=""
                           className="w-5 h-5 rounded-full object-cover"
                           loading="lazy"

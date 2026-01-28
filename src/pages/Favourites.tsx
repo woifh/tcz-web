@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MainLayout } from '../components/layout';
 import { useToast } from '../components/ui';
 import { getFavourites, addFavourite, removeFavourite, searchMembers } from '../api/members';
+import { getApiUrl } from '../lib/utils';
 
 export default function Favourites() {
   const queryClient = useQueryClient();
@@ -246,7 +247,7 @@ export default function Favourites() {
                   {/* Avatar */}
                   {fav.has_profile_picture ? (
                     <img
-                      src={`/api/members/${fav.id}/profile-picture?v=${fav.profile_picture_version}`}
+                      src={getApiUrl(`/api/members/${fav.id}/profile-picture?v=${fav.profile_picture_version}`)}
                       alt=""
                       className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                       loading="lazy"

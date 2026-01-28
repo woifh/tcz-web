@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MainLayout } from '../components/layout';
 import { useAuth } from '../hooks/useAuth';
 import { getMemberStatistics } from '../api/members';
+import { getApiUrl } from '../lib/utils';
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '';
@@ -159,7 +160,7 @@ export default function Statistics() {
                         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {partner.has_profile_picture ? (
                             <img
-                              src={`/api/members/${partner.member_id}/profile-picture?v=${partner.profile_picture_version}`}
+                              src={getApiUrl(`/api/members/${partner.member_id}/profile-picture?v=${partner.profile_picture_version}`)}
                               className="w-full h-full object-cover"
                               alt={partner.name}
                             />

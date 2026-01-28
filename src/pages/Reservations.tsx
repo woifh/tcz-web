@@ -4,6 +4,7 @@ import { MainLayout } from '../components/layout';
 import { useToast } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { getReservations, cancelReservation, type ReservationsResponse } from '../api/reservations';
+import { getApiUrl } from '../lib/utils';
 import type { Reservation } from '../types';
 
 export default function Reservations() {
@@ -102,7 +103,7 @@ export default function Reservations() {
           <div className="flex items-center gap-2">
             {hasProfilePicture ? (
               <img
-                src={`/api/members/${memberId}/profile-picture?v=${profilePictureVersion}`}
+                src={getApiUrl(`/api/members/${memberId}/profile-picture?v=${profilePictureVersion}`)}
                 alt=""
                 style={{ width: 28, height: 28, borderRadius: '9999px', objectFit: 'cover', flexShrink: 0 }}
                 loading="lazy"
