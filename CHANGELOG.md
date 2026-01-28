@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0] - 2026-01-28
+
 ### Added
 - Court blocking: Reservation conflict confirmation - shows affected reservations before cancelling
 - Court blocking: Visual indicator (Layers icon) when temp block suspends a regular block
@@ -11,6 +13,8 @@ All notable changes to this project will be documented in this file.
 - Court blocking: Search and filter for upcoming blocks
 
 ### Changed
+- Migrate UI to shadcn/ui-style design system (Radix UI, CVA, Tailwind)
+- Add design tokens and theming system with dark mode support
 - Redesign profile page with modern card-based layout (profile card, form sections, toggle switches)
 - Increased navigation icon sizes for better visibility
 
