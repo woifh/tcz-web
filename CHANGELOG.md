@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Profile pictures not loading on Cloudflare Pages deployment (cross-origin URL fix)
+- Block reasons: "Temporary" checkbox now hidden when editing (setting is immutable after creation)
 - Dashboard slot colors now consistent across themes (use explicit hex values)
 - Safari login: Switch from httpOnly cookies to Authorization header (Safari ITP blocks cross-origin cookies)
 

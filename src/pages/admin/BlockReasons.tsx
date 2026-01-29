@@ -453,18 +453,47 @@ export default function BlockReasons() {
               </span>
             </label>
 
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.is_temporary}
-                onChange={(e) => setFormData({ ...formData, is_temporary: e.target.checked })}
-                className="h-4 w-4 text-primary rounded"
-                data-testid="is-temporary-checkbox"
-              />
-              <span className="text-sm text-foreground">
-                Vorübergehende Sperrung (Buchungen werden suspendiert)
-              </span>
-            </label>
+            {/* Only show is_temporary checkbox when creating (not editing) */}
+            {!editingReason && (
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_temporary}
+                  onChange={(e) => setFormData({ ...formData, is_temporary: e.target.checked })}
+                  className="h-4 w-4 text-primary rounded mt-0.5"
+                  data-testid="is-temporary-checkbox"
+                />
+                <div>
+                  <span className="text-sm text-foreground">
+                    Vorübergehende Sperrung (Buchungen werden suspendiert)
+                  </span>
+                  <p className="text-xs text-warning mt-0.5">
+                    ⚠ Diese Einstellung kann nach dem Erstellen nicht mehr geändert werden.
+                  </p>
+                </div>
+              </label>
+            )}
+
+            {/* When editing, show the current value as read-only info */}
+            {editingReason && (
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                {editingReason.is_temporary ? (
+                  <>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning/20 text-warning">
+                      Vorübergehend
+                    </span>
+                    <span>(kann nicht geändert werden)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
+                      Permanent
+                    </span>
+                    <span>(kann nicht geändert werden)</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Actions */}
