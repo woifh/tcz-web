@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+- Admin calendar view feature (monthly block overview)
+
 ### Fixed
 - Profile pictures not loading on Cloudflare Pages deployment (cross-origin URL fix)
 - Dashboard slot colors now consistent across themes (use explicit hex values)

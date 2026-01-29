@@ -10,7 +10,7 @@ import Profile from './pages/Profile';
 import Reservations from './pages/Reservations';
 import Favourites from './pages/Favourites';
 import Statistics from './pages/Statistics';
-import { CourtBlocking, BlockReasons, Members, MemberDetail, AuditLog, AdminHome, FeatureFlags, Calendar } from './pages/admin';
+import { CourtBlocking, BlockReasons, Members, MemberDetail, AuditLog, AdminHome, FeatureFlags } from './pages/admin';
 import HelpCenter from './pages/HelpCenter';
 import { NotFound, Forbidden, ServerError } from './pages/errors';
 
@@ -210,14 +210,6 @@ function AppRoutes() {
         element={
           <AdminRoute>
             <FeatureFlags />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/calendar"
-        element={
-          <AdminRoute>
-            <Calendar />
           </AdminRoute>
         }
       />

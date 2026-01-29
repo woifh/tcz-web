@@ -123,10 +123,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
                             <span className="material-icons text-sm">list_alt</span>
                             <span>Sperrungsgründe</span>
                           </Link>
-                          <Link to="/admin/calendar" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <span className="material-icons text-sm">calendar_month</span>
-                            <span>Kalenderansicht</span>
-                          </Link>
                           <Link to="/admin/members" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                             <span className="material-icons text-sm">people</span>
                             <span>Mitglieder</span>
@@ -274,10 +270,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     <Link to="/admin/reasons" className="block w-full flex items-center gap-2 px-4 py-3 pl-12 hover:bg-green-600" onClick={() => setMobileMenuOpen(false)}>
                       <span className="material-icons text-sm">list_alt</span>
                       <span>Sperrungsgründe</span>
-                    </Link>
-                    <Link to="/admin/calendar" className="block w-full flex items-center gap-2 px-4 py-3 pl-12 hover:bg-green-600" onClick={() => setMobileMenuOpen(false)}>
-                      <span className="material-icons text-sm">calendar_month</span>
-                      <span>Kalenderansicht</span>
                     </Link>
                     <Link to="/admin/members" className="block w-full flex items-center gap-2 px-4 py-3 pl-12 hover:bg-green-600" onClick={() => setMobileMenuOpen(false)}>
                       <span className="material-icons text-sm">people</span>

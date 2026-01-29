@@ -36,11 +36,6 @@ test.describe('Admin', () => {
       await expect(page.getByRole('heading', { name: 'Platzsperrungen' })).toBeVisible();
     });
 
-    // Skip tests that require full form implementation
-    test.skip('shows calendar view', async ({ page }) => {
-      await expect(page.getByTestId('block-calendar')).toBeVisible();
-    });
-
     test('shows block form', async ({ page }) => {
       await expect(page.getByText('Neue Sperrung')).toBeVisible();
     });
