@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Profile pictures not loading on Cloudflare Pages deployment (cross-origin URL fix)
 - Dashboard slot colors now consistent across themes (use explicit hex values)
+- Safari login: Switch from httpOnly cookies to Authorization header (Safari ITP blocks cross-origin cookies)
 
 ## [1.0] - 2026-01-28
 

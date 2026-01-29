@@ -1,12 +1,35 @@
 import axios from 'axios';
 
-// JWT is stored in httpOnly cookie - browser sends it automatically
+const TOKEN_KEY = 'tcz_auth_token';
+
+// Token management functions
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
-  withCredentials: true, // Required to send/receive cookies cross-origin
+  withCredentials: true, // Still needed for CORS
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Request interceptor to add Authorization header
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // Response interceptor for handling auth errors
@@ -22,7 +45,8 @@ api.interceptors.response.use(
     const isOnLoginPage = window.location.pathname === '/login';
 
     if (error.response?.status === 401 && !isAuthCheck && !isAuthEndpoint && !isOnLoginPage) {
-      // Session expired during use - redirect to login
+      // Session expired during use - clear token and redirect to login
+      clearToken();
       window.location.href = '/login';
     }
     return Promise.reject(error);

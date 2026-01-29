@@ -4,6 +4,7 @@ import type { Member } from '../types';
 import { login as apiLogin, logout as apiLogout } from '../api/auth';
 import { getProfile } from '../api/members';
 import { AuthContext } from '../hooks/useAuth';
+import { clearToken } from '../api/client';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -43,6 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await apiLogout();
     } finally {
+      // Clear the token (in case apiLogout failed)
+      clearToken();
       // Clear the profile cache
       queryClient.setQueryData(['profile'], null);
       queryClient.removeQueries({ queryKey: ['profile'] });

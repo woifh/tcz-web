@@ -42,6 +42,7 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   user: Member;
+  access_token: string;
 }
 
 // Court types
