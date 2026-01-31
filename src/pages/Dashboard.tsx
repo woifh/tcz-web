@@ -129,7 +129,10 @@ export default function Dashboard() {
     date: string;
   } | null>(null);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(() => {
-    return localStorage.getItem('emailBannerDismissed') === 'true';
+    return sessionStorage.getItem('emailBannerDismissed') === 'true';
+  });
+  const [paymentBannerDismissed, setPaymentBannerDismissed] = useState(() => {
+    return sessionStorage.getItem('paymentBannerDismissed') === 'true';
   });
 
   const dateStr = formatDateISO(selectedDate);
@@ -521,147 +524,168 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      {/* Payment Status Banners */}
-      {hasUnpaidFee && (
-        <>
-          {paymentConfirmationRequested ? (
-            <div className="mb-4 bg-info/10 border-l-4 border-info p-4 rounded-r-lg">
-              <div className="flex items-center">
-                <span className="material-icons text-info mr-3">hourglass_empty</span>
-                <div>
-                  <p className="text-info font-semibold">Zahlungsbestätigung wird geprüft</p>
+      {/* Info Banners Container - side by side on desktop, stacked on mobile */}
+      {((hasUnpaidFee && !paymentBannerDismissed) || (user && !user.email_verified && !emailBannerDismissed)) && (
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          {/* Payment Status Banners */}
+          {hasUnpaidFee && !paymentBannerDismissed && (
+            <>
+              {paymentConfirmationRequested ? (
+                <div className="flex-1 bg-card border border-info/30 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-info/10 px-4 py-3 border-b border-info/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-info text-xl">hourglass_empty</span>
+                        <h3 className="font-semibold text-info">Zahlungsbestätigung wird geprüft</h3>
+                      </div>
+                      <button
+                        onClick={() => {
+                          sessionStorage.setItem('paymentBannerDismissed', 'true');
+                          setPaymentBannerDismissed(true);
+                        }}
+                        className="text-info/60 hover:text-info transition-colors p-1 -mr-1"
+                        aria-label="Schließen"
+                      >
+                        <span className="material-icons text-xl">close</span>
+                      </button>
+                    </div>
+                  </div>
                   {isPastDeadline && (
-                    <p className="text-info/80 text-xs mt-1">
-                      Buchungen sind bis zur Bestätigung weiterhin gesperrt.
-                    </p>
+                    <div className="p-4">
+                      <p className="text-muted-foreground text-sm">
+                        Buchungen sind bis zur Bestätigung weiterhin gesperrt.
+                      </p>
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
-          ) : isPastDeadline ? (
-            <div className="mb-4 bg-destructive/10 border-l-4 border-destructive p-4 rounded-r-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="material-icons text-destructive mr-3">block</span>
-                  <div>
-                    <p className="text-destructive font-semibold">Buchungen gesperrt</p>
-                    <p className="text-destructive/80 text-sm">
+              ) : isPastDeadline ? (
+                <div className="flex-1 bg-card border border-destructive/30 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-destructive/10 px-4 py-3 border-b border-destructive/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-destructive text-xl">block</span>
+                        <h3 className="font-semibold text-destructive">Buchungen gesperrt</h3>
+                      </div>
+                      <button
+                        onClick={() => {
+                          sessionStorage.setItem('paymentBannerDismissed', 'true');
+                          setPaymentBannerDismissed(true);
+                        }}
+                        className="text-destructive/60 hover:text-destructive transition-colors p-1 -mr-1"
+                        aria-label="Schließen"
+                      >
+                        <span className="material-icons text-xl">close</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                       Die Zahlungsfrist ist abgelaufen. Bitte zahl deinen Beitrag, um wieder buchen zu können.
                     </p>
+                    <button
+                      onClick={handleConfirmPayment}
+                      disabled={confirmPaymentMutation.isPending}
+                      className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-white font-semibold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <span className="material-icons text-lg">check_circle</span>
+                      Zahlung bestätigen
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={handleConfirmPayment}
-                  disabled={confirmPaymentMutation.isPending}
-                  className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
-                >
-                  <span className="material-icons text-sm">check_circle</span>
-                  Zahlung bestätigen
-                </button>
-              </div>
-            </div>
-          ) : paymentDeadline ? (
-            <div className="mb-4 bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="material-icons text-warning mr-3">schedule</span>
-                  <div>
-                    <p className="text-warning font-semibold">Mitgliedsbeitrag offen</p>
-                    <p className="text-warning/80 text-sm">
-                      {daysUntilDeadline === 0 ? (
-                        <>
-                          Zahlungsfrist: <strong>Heute</strong>
-                        </>
-                      ) : daysUntilDeadline === 1 ? (
-                        <>
-                          Noch <strong>1 Tag</strong> bis zur Zahlungsfrist
-                        </>
+              ) : (
+                <div className="flex-1 bg-card border border-warning/30 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-warning/10 px-4 py-3 border-b border-warning/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-icons text-warning text-xl">warning</span>
+                        <h3 className="font-semibold text-warning">Mitgliedsbeitrag offen</h3>
+                      </div>
+                      <button
+                        onClick={() => {
+                          sessionStorage.setItem('paymentBannerDismissed', 'true');
+                          setPaymentBannerDismissed(true);
+                        }}
+                        className="text-warning/60 hover:text-warning transition-colors p-1 -mr-1"
+                        aria-label="Schließen"
+                      >
+                        <span className="material-icons text-xl">close</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-muted-foreground text-sm mb-4">
+                      {paymentDeadline ? (
+                        daysUntilDeadline === 0 ? (
+                          <>Zahlungsfrist: <strong>Heute</strong></>
+                        ) : daysUntilDeadline === 1 ? (
+                          <>Noch <strong>1 Tag</strong> bis zur Zahlungsfrist</>
+                        ) : (
+                          <>Noch <strong>{daysUntilDeadline} Tage</strong> bis zur Zahlungsfrist</>
+                        )
                       ) : (
-                        <>
-                          Noch <strong>{daysUntilDeadline} Tage</strong> bis zur Zahlungsfrist
-                        </>
+                        'Dein Mitgliedsbeitrag ist noch nicht bezahlt.'
                       )}
                     </p>
+                    <button
+                      onClick={handleConfirmPayment}
+                      disabled={confirmPaymentMutation.isPending}
+                      className="w-full sm:w-auto bg-warning hover:bg-warning/90 text-white font-semibold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <span className="material-icons text-lg">check_circle</span>
+                      Zahlung bestätigen
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={handleConfirmPayment}
-                  disabled={confirmPaymentMutation.isPending}
-                  className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
-                >
-                  <span className="material-icons text-sm">check_circle</span>
-                  Zahlung bestätigen
-                </button>
+              )}
+            </>
+          )}
+
+          {/* Email verification reminder */}
+          {user && !user.email_verified && !emailBannerDismissed && (
+            <div className="flex-1 bg-card border border-warning/30 rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-warning/10 px-4 py-3 border-b border-warning/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-icons text-warning text-xl">mark_email_unread</span>
+                    <h3 className="font-semibold text-warning">E-Mail-Adresse nicht bestätigt</h3>
+                  </div>
+                  <button
+                    onClick={() => {
+                      sessionStorage.setItem('emailBannerDismissed', 'true');
+                      setEmailBannerDismissed(true);
+                    }}
+                    className="text-warning/60 hover:text-warning transition-colors p-1 -mr-1"
+                    aria-label="Schließen"
+                  >
+                    <span className="material-icons text-xl">close</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="mb-4 bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="material-icons text-warning mr-3">warning</span>
-                  <div>
-                    <p className="text-warning font-semibold">Mitgliedsbeitrag offen</p>
-                    <p className="text-warning/80 text-sm">Dein Mitgliedsbeitrag ist noch nicht bezahlt.</p>
-                  </div>
-                </div>
+              <div className="p-4">
+                <p className="text-muted-foreground text-sm mb-4">
+                  Du erhältst keine E-Mail-Benachrichtigungen zu deinen Buchungen, bis du deine E-Mail-Adresse bestätigst.
+                </p>
                 <button
-                  onClick={handleConfirmPayment}
-                  disabled={confirmPaymentMutation.isPending}
-                  className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 px-4 rounded transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+                  onClick={() => resendVerificationMutation.mutate()}
+                  disabled={resendVerificationMutation.isPending || resendVerificationMutation.isSuccess}
+                  className={`w-full sm:w-auto ${
+                    resendVerificationMutation.isSuccess
+                      ? 'bg-success'
+                      : 'bg-warning hover:bg-warning/90'
+                  } text-white font-semibold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50`}
                 >
-                  <span className="material-icons text-sm">check_circle</span>
-                  Zahlung bestätigen
+                  <span className="material-icons text-lg">
+                    {resendVerificationMutation.isSuccess ? 'check' : 'send'}
+                  </span>
+                  {resendVerificationMutation.isPending
+                    ? 'Wird gesendet...'
+                    : resendVerificationMutation.isSuccess
+                      ? 'E-Mail gesendet'
+                      : 'Bestätigungs-E-Mail senden'}
                 </button>
               </div>
             </div>
           )}
-        </>
-      )}
-
-      {/* Email verification reminder */}
-      {user && !user.email_verified && !emailBannerDismissed && (
-        <div className="mb-4 bg-card border border-warning/30 rounded-xl shadow-sm overflow-hidden">
-          <div className="bg-warning/10 px-4 py-3 border-b border-warning/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="material-icons text-warning text-xl">mark_email_unread</span>
-                <h3 className="font-semibold text-warning">E-Mail-Adresse nicht bestätigt</h3>
-              </div>
-              <button
-                onClick={() => {
-                  localStorage.setItem('emailBannerDismissed', 'true');
-                  setEmailBannerDismissed(true);
-                }}
-                className="text-warning/60 hover:text-warning transition-colors p-1 -mr-1"
-                aria-label="Schließen"
-              >
-                <span className="material-icons text-xl">close</span>
-              </button>
-            </div>
-          </div>
-          <div className="p-4">
-            <p className="text-muted-foreground text-sm mb-4">
-              Du erhältst keine E-Mail-Benachrichtigungen zu deinen Buchungen, bis du deine E-Mail-Adresse bestätigst.
-            </p>
-            <button
-              onClick={() => resendVerificationMutation.mutate()}
-              disabled={resendVerificationMutation.isPending || resendVerificationMutation.isSuccess}
-              className={`w-full sm:w-auto ${
-                resendVerificationMutation.isSuccess
-                  ? 'bg-success'
-                  : 'bg-warning hover:bg-warning/90'
-              } text-white font-semibold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50`}
-            >
-              <span className="material-icons text-lg">
-                {resendVerificationMutation.isSuccess ? 'check' : 'send'}
-              </span>
-              {resendVerificationMutation.isPending
-                ? 'Wird gesendet...'
-                : resendVerificationMutation.isSuccess
-                  ? 'E-Mail gesendet'
-                  : 'Bestätigungs-E-Mail senden'}
-            </button>
-          </div>
         </div>
       )}
 

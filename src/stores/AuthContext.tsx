@@ -49,6 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear the profile cache
       queryClient.setQueryData(['profile'], null);
       queryClient.removeQueries({ queryKey: ['profile'] });
+      // Clear session-specific dismissed banners
+      sessionStorage.removeItem('emailBannerDismissed');
+      sessionStorage.removeItem('paymentBannerDismissed');
     }
   };
 

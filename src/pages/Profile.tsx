@@ -204,7 +204,9 @@ export default function Profile() {
                 {/* Avatar */}
                 <div className="relative mb-4">
                   <div
-                    className="rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center overflow-hidden border-4 border-white shadow-xl"
+                    className={`rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-xl ${
+                      profile?.has_profile_picture ? '' : 'bg-primary'
+                    }`}
                     style={{ width: 128, height: 128 }}
                   >
                     {profile?.has_profile_picture ? (
@@ -214,7 +216,7 @@ export default function Profile() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-4xl font-semibold text-white">
+                      <span className="text-4xl font-bold text-white">
                         {getInitials(profile?.firstname, profile?.lastname)}
                       </span>
                     )}

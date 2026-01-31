@@ -25,7 +25,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation bar */}
-      <nav className="bg-primary text-primary-foreground p-4" id="main-navigation">
+      <nav className="bg-green-700 text-white p-4" id="main-navigation">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -34,7 +34,7 @@ export default function Login() {
               <span className="sm:hidden">TC Zellerndorf</span>
               <span className="material-icons">sports_tennis</span>
             </h1>
-            <Link to="/login" className="hover:bg-primary/80 px-3 py-2 rounded transition-colors flex items-center gap-1">
+            <Link to="/login" className="hover:bg-green-600 px-3 py-2 rounded transition-colors flex items-center gap-1">
               <span className="material-icons text-sm">login</span>
               <span>Anmelden</span>
             </Link>

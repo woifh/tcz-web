@@ -4,10 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Dashboard info banners (email verification, payment) redesigned with card styling and close buttons
+- Info banners now display side-by-side on desktop, stacked on mobile
+- Banner dismissal is now session-based (reappears after logout/login)
+
 ### Removed
 - Admin calendar view feature (monthly block overview)
 
 ### Fixed
+- Profile picture placeholder now shows initials clearly (solid background instead of faint gradient)
+- Login page header color now matches logged-in navigation
 - Profile pictures not loading on Cloudflare Pages deployment (cross-origin URL fix)
 - Block reasons: "Temporary" checkbox now hidden when editing (setting is immutable after creation)
 - Dashboard slot colors now consistent across themes (use explicit hex values)
